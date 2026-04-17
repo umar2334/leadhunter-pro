@@ -178,9 +178,9 @@ export default function LeadTable({ leads, onStatusChange, onDelete, selectedIds
                     <Link href={`/leads/${lead.id}`} className="action-link">View</Link>
                     <button
                       onClick={() => { if (confirm(`Delete "${lead.name}"?`)) onDelete(lead.id); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e0', padding: '2px 4px', borderRadius: 4, display: 'flex', alignItems: 'center', transition: 'color 0.15s' }}
-                      onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
-                      onMouseLeave={e => (e.currentTarget.style.color = '#cbd5e0')}
+                      style={{ background: '#fef2f2', border: '1px solid #fca5a5', cursor: 'pointer', color: '#ef4444', padding: '4px 6px', borderRadius: 6, display: 'flex', alignItems: 'center', transition: 'all 0.15s' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#ef4444'; (e.currentTarget as HTMLButtonElement).style.color = '#fff'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2'; (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'; }}
                       title="Delete lead">
                       <Trash2 size={13} />
                     </button>
