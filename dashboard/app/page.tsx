@@ -50,40 +50,46 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a12]">
+    <div className="min-h-screen bg-[#08080f]">
       {/* Top Nav */}
-      <nav className="border-b border-[#2d2d3d] bg-[#0a0a12] px-6 py-4 flex items-center justify-between sticky top-0 z-10 backdrop-blur">
-        <div className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-indigo-500" />
-          <span className="text-white font-bold text-lg">LeadHunter <span className="text-indigo-500">Pro</span></span>
+      <nav className="border-b border-[#1e1e2e] bg-[#0a0a14]/80 backdrop-blur-md px-6 py-3.5 flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
+            <Zap className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-white font-bold text-base tracking-tight">
+            LeadHunter <span className="text-indigo-400">Pro</span>
+          </span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-600">
-            {stats.total} leads total
+          <span className="hidden sm:block text-xs text-slate-600 bg-[#12121e] border border-[#2d2d3d] px-2.5 py-1 rounded-full">
+            {stats.total} leads
           </span>
           <button onClick={fetchData}
-            className="text-slate-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-[#1a1a2e]">
+            className="text-slate-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-[#1a1a2e] border border-transparent hover:border-[#2d2d3d]">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </nav>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white">Lead Dashboard</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Businesses extracted from Google Maps, analyzed and ready for outreach
-          </p>
+        {/* Page header */}
+        <div className="mb-7 flex items-end justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">Lead Dashboard</h1>
+            <p className="text-slate-500 text-sm mt-0.5">
+              Businesses from Google Maps — analyzed and ready for outreach
+            </p>
+          </div>
         </div>
 
         <StatsBar stats={stats} />
-
         <LeadFilters filters={filters} onChange={setFilters} />
 
         {loading ? (
-          <div className="text-center py-20 text-slate-600">
-            <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-3" />
-            Loading leads...
+          <div className="text-center py-24 text-slate-600 bg-[#0c0c18] rounded-2xl border border-[#2d2d3d]">
+            <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-3 text-indigo-500" />
+            <span className="text-sm text-slate-500">Loading leads...</span>
           </div>
         ) : (
           <LeadTable

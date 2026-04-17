@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import type { Lead } from '@/lib/api';
 import { leadsApi } from '@/lib/api';
-import { ExternalLink, Phone, Globe, MapPin, Mail, Download } from 'lucide-react';
+import { ExternalLink, Phone, Globe, MapPin, Mail, Download, ArrowUpRight } from 'lucide-react';
 
 interface Props {
   leads: Lead[];
@@ -10,9 +10,9 @@ interface Props {
 }
 
 const oppBadge: Record<string, string> = {
-  no_website:   'bg-amber-950 text-amber-400 border border-amber-800',
-  weak_website: 'bg-orange-950 text-orange-400 border border-orange-900',
-  has_website:  'bg-emerald-950 text-emerald-400 border border-emerald-900',
+  no_website:   'bg-amber-950/60 text-amber-400 border border-amber-800/60',
+  weak_website: 'bg-orange-950/60 text-orange-400 border border-orange-800/60',
+  has_website:  'bg-emerald-950/60 text-emerald-400 border border-emerald-800/60',
 };
 const oppLabel: Record<string, string> = {
   no_website:   '🔥 No Website',
@@ -23,7 +23,7 @@ const statusColors: Record<string, string> = {
   new:       'text-slate-400',
   contacted: 'text-blue-400',
   replied:   'text-purple-400',
-  converted: 'text-green-400',
+  converted: 'text-emerald-400',
   dead:      'text-slate-600',
 };
 const STATUSES = ['new', 'contacted', 'replied', 'converted', 'dead'] as const;
@@ -31,9 +31,10 @@ const STATUSES = ['new', 'contacted', 'replied', 'converted', 'dead'] as const;
 export default function LeadTable({ leads, onStatusChange }: Props) {
   if (!leads.length) {
     return (
-      <div className="text-center py-20 text-slate-600">
-        <div className="text-4xl mb-3">📭</div>
-        <div>No leads found. Use the Chrome extension to extract businesses from Maps.</div>
+      <div className="text-center py-24 text-slate-600 bg-[#0c0c18] rounded-2xl border border-[#2d2d3d] border-dashed">
+        <div className="text-5xl mb-4">📭</div>
+        <div className="text-slate-500 font-medium mb-1">No leads found</div>
+        <div className="text-sm text-slate-600">Use the Chrome extension to extract businesses from Google Maps.</div>
       </div>
     );
   }
@@ -42,115 +43,116 @@ export default function LeadTable({ leads, onStatusChange }: Props) {
     <div>
       {/* Export bar */}
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs text-slate-500">{leads.length} leads shown</span>
+        <span className="text-xs text-slate-600 font-medium">
+          Showing <span className="text-slate-400">{leads.length}</span> leads
+        </span>
         <div className="flex gap-2">
           <a
             href={leadsApi.exportXlsxUrl()}
             download="leads.xlsx"
-            className="inline-flex items-center gap-1.5 text-xs bg-emerald-950 border border-emerald-800 hover:border-emerald-500 text-emerald-400 hover:text-emerald-300 px-3 py-1.5 rounded-lg transition-colors font-semibold"
-          >
+            className="inline-flex items-center gap-1.5 text-xs bg-emerald-950/70 border border-emerald-800/70 hover:border-emerald-500 hover:bg-emerald-950 text-emerald-400 hover:text-emerald-300 px-3 py-1.5 rounded-lg transition-all font-semibold">
             <Download className="w-3.5 h-3.5" /> Export Excel
           </a>
           <a
             href={leadsApi.exportCsvUrl()}
             download="leads.csv"
-            className="inline-flex items-center gap-1.5 text-xs bg-[#1a1a2e] border border-[#2d2d3d] hover:border-indigo-500 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors"
-          >
+            className="inline-flex items-center gap-1.5 text-xs bg-[#12121e] border border-[#2d2d3d] hover:border-slate-500 text-slate-500 hover:text-slate-300 px-3 py-1.5 rounded-lg transition-all">
             <Download className="w-3.5 h-3.5" /> CSV
           </a>
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-[#2d2d3d]">
+      <div className="rounded-xl border border-[#2d2d3d] overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-[#12121e] border-b border-[#2d2d3d]">
+            <tr className="bg-[#0d0d1a] border-b border-[#2d2d3d]">
               {['Business', 'Category', 'Contact', 'Opportunity', 'Score', 'Status', ''].map((h) => (
-                <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
+                <th key={h} className="text-left px-4 py-3 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">{h}</th>
               ))}
             </tr>
           </thead>
-          <tbody>
-            {leads.map((lead, i) => (
+          <tbody className="divide-y divide-[#1e1e2e]">
+            {leads.map((lead) => (
               <tr key={lead.id}
-                className={`border-b border-[#2d2d3d] hover:bg-[#1a1a2e] transition-colors ${i % 2 === 0 ? 'bg-[#0f0f18]' : 'bg-[#12121e]'}`}>
+                className="bg-[#0f0f1a] hover:bg-[#14142a] transition-colors group">
 
                 {/* Name + address */}
-                <td className="px-4 py-3 max-w-[200px]">
-                  <div className="font-semibold text-slate-200 truncate">{lead.name}</div>
+                <td className="px-4 py-3.5 max-w-[200px]">
+                  <div className="font-semibold text-slate-200 truncate leading-snug">{lead.name}</div>
                   {lead.address && (
                     <div className="text-xs text-slate-600 flex items-center gap-1 mt-0.5 truncate">
-                      <MapPin className="w-3 h-3 flex-shrink-0" />{lead.address}
+                      <MapPin className="w-3 h-3 flex-shrink-0 text-slate-700" />
+                      <span className="truncate">{lead.address}</span>
                     </div>
                   )}
                 </td>
 
                 {/* Category */}
-                <td className="px-4 py-3">
-                  <span className="text-slate-400 text-xs">{lead.category || '—'}</span>
+                <td className="px-4 py-3.5">
+                  <span className="text-slate-500 text-xs">{lead.category || '—'}</span>
                 </td>
 
-                {/* Contact — phone + email + website */}
-                <td className="px-4 py-3 min-w-[160px]">
+                {/* Contact */}
+                <td className="px-4 py-3.5 min-w-[170px]">
                   {lead.phone && (
-                    <a href={`tel:${lead.phone}`} className="text-xs text-slate-400 hover:text-indigo-400 flex items-center gap-1">
-                      <Phone className="w-3 h-3" />{lead.phone}
+                    <a href={`tel:${lead.phone}`} className="text-xs text-slate-400 hover:text-indigo-400 flex items-center gap-1.5 transition-colors">
+                      <Phone className="w-3 h-3 flex-shrink-0" />{lead.phone}
                     </a>
                   )}
                   {lead.email && (
-                    <a href={`mailto:${lead.email}`} className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 mt-0.5 max-w-[160px] truncate">
+                    <a href={`mailto:${lead.email}`} className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 mt-0.5 max-w-[160px] truncate transition-colors">
                       <Mail className="w-3 h-3 flex-shrink-0" />{lead.email}
                     </a>
                   )}
                   {lead.website && (
                     <a href={lead.website} target="_blank" rel="noopener noreferrer"
-                      className="text-xs text-slate-500 hover:text-indigo-400 flex items-center gap-1 mt-0.5 max-w-[160px] truncate">
+                      className="text-xs text-slate-600 hover:text-indigo-400 flex items-center gap-1.5 mt-0.5 max-w-[160px] truncate transition-colors">
                       <Globe className="w-3 h-3 flex-shrink-0" />
-                      {lead.website.replace(/^https?:\/\//, '').slice(0, 25)}
+                      <span className="truncate">{lead.website.replace(/^https?:\/\//, '').slice(0, 25)}</span>
                     </a>
                   )}
                   {!lead.phone && !lead.email && !lead.website && <span className="text-slate-700 text-xs">—</span>}
                 </td>
 
                 {/* Opportunity */}
-                <td className="px-4 py-3">
-                  <span className={`text-xs px-2 py-1 rounded-full font-semibold ${oppBadge[lead.opportunity_type]}`}>
+                <td className="px-4 py-3.5">
+                  <span className={`inline-flex text-[11px] px-2 py-1 rounded-full font-semibold whitespace-nowrap ${oppBadge[lead.opportunity_type]}`}>
                     {oppLabel[lead.opportunity_type]}
                   </span>
                 </td>
 
                 {/* Score */}
-                <td className="px-4 py-3">
+                <td className="px-4 py-3.5">
                   {lead.analysis_score !== null ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-[#2d2d3d] rounded-full">
+                    <div className="flex items-center gap-2 min-w-[70px]">
+                      <div className="w-14 h-1.5 bg-[#2d2d3d] rounded-full overflow-hidden">
                         <div className="h-full rounded-full" style={{
-                          width: `${Math.max(lead.analysis_score, 3)}%`,
+                          width: `${Math.max(lead.analysis_score, 4)}%`,
                           background: lead.analysis_score < 40 ? '#ef4444' : lead.analysis_score < 65 ? '#f97316' : '#4ade80',
                         }} />
                       </div>
-                      <span className="text-xs text-slate-400">{lead.analysis_score}</span>
+                      <span className="text-xs font-medium text-slate-400">{lead.analysis_score}</span>
                     </div>
                   ) : <span className="text-slate-700 text-xs">—</span>}
                 </td>
 
                 {/* Status */}
-                <td className="px-4 py-3">
+                <td className="px-4 py-3.5">
                   <select
-                    className={`bg-transparent border-none text-xs font-medium cursor-pointer focus:outline-none ${statusColors[lead.status]}`}
+                    className={`bg-transparent border-none text-xs font-semibold cursor-pointer focus:outline-none ${statusColors[lead.status]} capitalize`}
                     value={lead.status}
                     onChange={(e) => onStatusChange(lead.id, e.target.value as Lead['status'])}>
                     {STATUSES.map((s) => (
-                      <option key={s} value={s} className="bg-[#1a1a2e] text-slate-300">{s}</option>
+                      <option key={s} value={s} className="bg-[#12121e] text-slate-300 capitalize">{s}</option>
                     ))}
                   </select>
                 </td>
 
                 {/* View */}
-                <td className="px-4 py-3">
+                <td className="px-4 py-3.5">
                   <Link href={`/leads/${lead.id}`}
-                    className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-medium">
-                    View <ExternalLink className="w-3 h-3" />
+                    className="inline-flex items-center gap-1 text-xs text-slate-600 group-hover:text-indigo-400 font-medium transition-colors">
+                    View <ArrowUpRight className="w-3 h-3" />
                   </Link>
                 </td>
               </tr>
