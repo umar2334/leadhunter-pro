@@ -80,6 +80,21 @@ router.get('/export.csv', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /leads
+router.get('/', async (req, res, next) => {
+  try {
+    const { opportunity_type, category, status, search, limit = 100, offset = 0 } = req.query;
+    let query = supabase.from('leads').select('*').order('created_at', { ascending: false }).range(Number(offset), Number(offset) + Number(limit) - 1);
+    if (opportunity_type) query = query.eq('opportunity_type', opportunity_type);
+    if (category) query = query.ilike('category', `%${category}%`);
+    if (status) query = query.eq('status', status);
+    if (search) query = query.or(`name.ilike.%${search}%,address.ilike.%${search}%`);
+    const { data, error, count } = await query;
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ leads: data, total: count });
+  } catch (err) { next(err); }
+});
+
 // GET /leads/stats
 router.get('/stats', async (req, res, next) => {
   try {
