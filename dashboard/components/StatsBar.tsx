@@ -1,47 +1,28 @@
 'use client';
-import { Users, WifiOff, Wifi, PhoneCall, TrendingUp } from 'lucide-react';
 import type { Stats } from '@/lib/api';
+import { Users, WifiOff, Wifi, PhoneCall, TrendingUp } from 'lucide-react';
 
 interface Props { stats: Stats }
 
 export default function StatsBar({ stats }: Props) {
   const cards = [
-    {
-      label: 'Total Leads', value: stats.total,
-      icon: <Users size={16} />, borderColor: '#6366f1',
-      iconBg: 'rgba(99,102,241,0.15)', iconColor: '#818cf8', valueColor: '#fff',
-    },
-    {
-      label: 'No Website', value: stats.no_website,
-      icon: <WifiOff size={16} />, borderColor: '#f59e0b',
-      iconBg: 'rgba(245,158,11,0.15)', iconColor: '#fbbf24', valueColor: '#fbbf24',
-    },
-    {
-      label: 'Weak Website', value: stats.weak_website,
-      icon: <Wifi size={16} />, borderColor: '#f97316',
-      iconBg: 'rgba(249,115,22,0.15)', iconColor: '#fb923c', valueColor: '#fb923c',
-    },
-    {
-      label: 'Contacted', value: stats.contacted,
-      icon: <PhoneCall size={16} />, borderColor: '#3b82f6',
-      iconBg: 'rgba(59,130,246,0.15)', iconColor: '#60a5fa', valueColor: '#60a5fa',
-    },
-    {
-      label: 'Converted', value: stats.converted,
-      icon: <TrendingUp size={16} />, borderColor: '#10b981',
-      iconBg: 'rgba(16,185,129,0.15)', iconColor: '#34d399', valueColor: '#34d399',
-    },
+    { label: 'Total Leads',  value: stats.total,        icon: <Users size={14} />,     bar: '#6366f1', iconColor: '#6366f1' },
+    { label: 'No Website',   value: stats.no_website,   icon: <WifiOff size={14} />,   bar: '#ef4444', iconColor: '#ef4444' },
+    { label: 'Weak Site',    value: stats.weak_website, icon: <Wifi size={14} />,      bar: '#f97316', iconColor: '#f97316' },
+    { label: 'Contacted',    value: stats.contacted,    icon: <PhoneCall size={14} />, bar: '#3b82f6', iconColor: '#3b82f6' },
+    { label: 'Converted',    value: stats.converted,    icon: <TrendingUp size={14} />,bar: '#10b981', iconColor: '#10b981' },
   ];
 
   return (
-    <div className="stats-grid">
+    <div className="stats-row">
       {cards.map((c) => (
-        <div key={c.label} className="stat-card" style={{ borderTopColor: c.borderColor }}>
-          <div className="stat-card-icon" style={{ background: c.iconBg, color: c.iconColor }}>
-            {c.icon}
+        <div key={c.label} className="stat-box">
+          <div className="stat-box-header">
+            <span className="stat-box-label">{c.label}</span>
+            <span className="stat-box-icon" style={{ color: c.iconColor }}>{c.icon}</span>
           </div>
-          <div className="stat-card-value" style={{ color: c.valueColor }}>{c.value}</div>
-          <div className="stat-card-label">{c.label}</div>
+          <div className="stat-box-value">{c.value}</div>
+          <div className="stat-box-bar" style={{ background: c.bar }} />
         </div>
       ))}
     </div>

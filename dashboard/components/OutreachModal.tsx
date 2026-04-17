@@ -9,7 +9,6 @@ interface Props {
   onClose: () => void;
   onMarkContacted: () => void;
 }
-
 type Tab = 'email' | 'whatsapp' | 'call_script';
 
 export default function OutreachModal({ leadId, leadName, onClose, onMarkContacted }: Props) {
@@ -21,163 +20,130 @@ export default function OutreachModal({ leadId, leadName, onClose, onMarkContact
   async function generate() {
     setLoading(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/outreach`,
-        { method: 'POST' }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/outreach`, { method: 'POST' });
       const data = await res.json();
       setMessages(data);
-    } catch {
-      alert('Failed to generate messages — check API connection.');
-    }
+    } catch { alert('Failed to generate — check API connection.'); }
     setLoading(false);
   }
 
   async function copy(text: string, key: string) {
     await navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
+    setCopied(key); setTimeout(() => setCopied(null), 2000);
   }
 
-  const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
-    { key: 'email',       label: 'Email',       icon: <Mail className="w-4 h-4" /> },
-    { key: 'whatsapp',    label: 'WhatsApp',    icon: <MessageSquare className="w-4 h-4" /> },
-    { key: 'call_script', label: 'Call Script', icon: <Phone className="w-4 h-4" /> },
+  const tabs = [
+    { key: 'email' as Tab,       label: 'Email',       icon: <Mail size={13} /> },
+    { key: 'whatsapp' as Tab,    label: 'WhatsApp',    icon: <MessageSquare size={13} /> },
+    { key: 'call_script' as Tab, label: 'Call Script', icon: <Phone size={13} /> },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-2xl bg-[#12121e] border border-[#2d2d3d] rounded-2xl shadow-2xl">
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2d2d3d]">
+    <div className="modal-overlay">
+      <div className="modal-box">
+        <div className="modal-header">
           <div>
-            <h2 className="text-base font-semibold text-white">AI Outreach Generator</h2>
-            <p className="text-xs text-slate-500 mt-0.5">{leadName}</p>
+            <div className="modal-title">AI Outreach Generator</div>
+            <div className="modal-sub">{leadName}</div>
           </div>
-          <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
-            <X className="w-5 h-5" />
-          </button>
+          <button className="modal-close" onClick={onClose}><X size={15} /></button>
         </div>
 
-        {/* Body */}
-        <div className="p-6">
+        <div className="modal-body">
           {!messages && !loading && (
-            <div className="text-center py-8">
-              <div className="text-4xl mb-4">✍️</div>
-              <p className="text-slate-400 text-sm mb-6">
-                Generate personalized outreach messages using AI — tailored to<br />
-                this business's specific situation and website weaknesses.
+            <div style={{ textAlign: 'center', padding: '32px 16px' }}>
+              <div style={{ fontSize: 44, marginBottom: 14 }}>✍️</div>
+              <p style={{ fontSize: 13, color: '#718096', marginBottom: 22, lineHeight: 1.7 }}>
+                Generate personalized outreach messages using AI —<br />
+                tailored to this business's situation and website weaknesses.
               </p>
               <button onClick={generate}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors text-sm">
+                style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 10, padding: '11px 28px', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(99,102,241,0.25)', fontFamily: 'inherit' }}>
                 Generate Messages
               </button>
             </div>
           )}
 
           {loading && (
-            <div className="text-center py-10">
-              <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mx-auto mb-3" />
-              <p className="text-slate-500 text-sm">Crafting personalized messages...</p>
+            <div style={{ textAlign: 'center', padding: '40px 16px' }}>
+              <Loader2 size={28} style={{ color: '#6366f1', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px', display: 'block' }} />
+              <p style={{ fontSize: 13, color: '#a0aec0' }}>Crafting personalized messages...</p>
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
           )}
 
           {messages && (
             <>
-              {/* Tabs */}
-              <div className="flex gap-1 bg-[#0a0a12] rounded-lg p-1 mb-5">
+              <div className="modal-tabs">
                 {tabs.map((t) => (
-                  <button key={t.key}
-                    onClick={() => setActiveTab(t.key)}
-                    className={`flex-1 flex items-center justify-center gap-2 text-xs font-medium py-2 rounded-md transition-colors ${
-                      activeTab === t.key
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-slate-500 hover:text-slate-300'
-                    }`}>
-                    {t.icon}{t.label}
+                  <button key={t.key} className={`modal-tab ${activeTab === t.key ? 'active' : ''}`}
+                    onClick={() => setActiveTab(t.key)}>
+                    {t.icon} {t.label}
                   </button>
                 ))}
               </div>
 
-              {/* Email */}
               {activeTab === 'email' && (
-                <div className="space-y-3">
-                  <div className="bg-[#0a0a12] border border-[#2d2d3d] rounded-lg p-3">
-                    <div className="text-xs text-slate-500 mb-1">Subject</div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-200">{messages.email.subject}</span>
-                      <button onClick={() => copy(messages.email.subject, 'subject')}
-                        className="text-slate-500 hover:text-white ml-3 flex-shrink-0">
-                        {copied === 'subject' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div className="msg-box">
+                    <div className="msg-label">
+                      Subject
+                      <button className="msg-copy-btn" onClick={() => copy(messages.email.subject, 'subject')}>
+                        {copied === 'subject' ? <Check size={14} style={{ color: '#10b981' }} /> : <Copy size={14} />}
                       </button>
                     </div>
+                    <div className="msg-text" style={{ fontWeight: 600 }}>{messages.email.subject}</div>
                   </div>
-
-                  <div className="bg-[#0a0a12] border border-[#2d2d3d] rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-xs text-slate-500">Email Body</div>
-                      <button onClick={() => copy(messages.email.body, 'body')}
-                        className="text-slate-500 hover:text-white">
-                        {copied === 'body' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                  <div className="msg-box">
+                    <div className="msg-label">
+                      Email Body
+                      <button className="msg-copy-btn" onClick={() => copy(messages.email.body, 'body')}>
+                        {copied === 'body' ? <Check size={14} style={{ color: '#10b981' }} /> : <Copy size={14} />}
                       </button>
                     </div>
-                    <pre className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed font-sans">
-                      {messages.email.body}
-                    </pre>
+                    <div className="msg-text">{messages.email.body}</div>
                   </div>
                 </div>
               )}
 
-              {/* WhatsApp */}
               {activeTab === 'whatsapp' && (
-                <div className="bg-[#0a0a12] border border-[#2d2d3d] rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-xs text-slate-500">WhatsApp Message</div>
-                    <button onClick={() => copy(messages.whatsapp, 'wa')}
-                      className="text-slate-500 hover:text-white">
-                      {copied === 'wa' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                <div className="msg-box">
+                  <div className="msg-label">
+                    WhatsApp Message
+                    <button className="msg-copy-btn" onClick={() => copy(messages.whatsapp, 'wa')}>
+                      {copied === 'wa' ? <Check size={14} style={{ color: '#10b981' }} /> : <Copy size={14} />}
                     </button>
                   </div>
-                  <div className="inline-block bg-[#1a2e1a] border border-green-900/50 text-green-200 text-sm rounded-xl rounded-tl-none px-4 py-3 max-w-xs leading-relaxed">
-                    {messages.whatsapp}
+                  <div className="wa-bubble">{messages.whatsapp}</div>
+                  <div style={{ marginTop: 14 }}>
+                    <a href={`https://wa.me/?text=${encodeURIComponent(messages.whatsapp)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#16a34a', color: '#fff', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+                      Open in WhatsApp
+                    </a>
                   </div>
-                  {typeof messages.whatsapp === 'string' && (
-                    <div className="mt-4">
-                      <a
-                        href={`https://wa.me/?text=${encodeURIComponent(messages.whatsapp)}`}
-                        target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-green-700 hover:bg-green-600 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
-                        Open in WhatsApp
-                      </a>
-                    </div>
-                  )}
                 </div>
               )}
 
-              {/* Call Script */}
               {activeTab === 'call_script' && (
-                <div className="bg-[#0a0a12] border border-[#2d2d3d] rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-xs text-slate-500">Call Script</div>
-                    <button onClick={() => copy(messages.call_script, 'call')}
-                      className="text-slate-500 hover:text-white">
-                      {copied === 'call' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                <div className="msg-box">
+                  <div className="msg-label">
+                    Call Script
+                    <button className="msg-copy-btn" onClick={() => copy(messages.call_script, 'call')}>
+                      {copied === 'call' ? <Check size={14} style={{ color: '#10b981' }} /> : <Copy size={14} />}
                     </button>
                   </div>
-                  <p className="text-sm text-slate-300 leading-relaxed">{messages.call_script}</p>
+                  <div className="msg-text">{messages.call_script}</div>
                 </div>
               )}
 
-              {/* Regenerate + mark contacted */}
-              <div className="flex gap-3 mt-5">
-                <button onClick={generate}
-                  className="text-xs text-slate-500 hover:text-slate-300 underline">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 }}>
+                <button onClick={generate} style={{ fontSize: 12, color: '#a0aec0', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }}>
                   Regenerate
                 </button>
                 <button onClick={() => { onMarkContacted(); onClose(); }}
-                  className="ml-auto bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors">
-                  Mark as Contacted
+                  style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 9, padding: '10px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 12px rgba(99,102,241,0.2)' }}>
+                  Mark as Contacted ✓
                 </button>
               </div>
             </>

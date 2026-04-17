@@ -5,7 +5,7 @@ import StatsBar from '@/components/StatsBar';
 import LeadFilters from '@/components/LeadFilters';
 import LeadTable from '@/components/LeadTable';
 import OutreachModal from '@/components/OutreachModal';
-import { RefreshCw, Zap } from 'lucide-react';
+import { Bell, HelpCircle, RefreshCw, Search } from 'lucide-react';
 
 const DEFAULT_FILTERS = { opportunity_type: '', status: '', category: '', search: '' };
 const DEFAULT_STATS: Stats = { total: 0, no_website: 0, weak_website: 0, has_website: 0, new: 0, contacted: 0, converted: 0 };
@@ -25,10 +25,9 @@ export default function HomePage() {
       if (filters.status) params.status = filters.status;
       if (filters.category) params.category = filters.category;
       if (filters.search) params.search = filters.search;
-      const [leadsData, statsData] = await Promise.all([leadsApi.list(params), leadsApi.stats()]);
-      setLeads(leadsData.leads);
-      setStats(statsData);
-    } catch (err) { console.error(err); }
+      const [ld, sd] = await Promise.all([leadsApi.list(params), leadsApi.stats()]);
+      setLeads(ld.leads); setStats(sd);
+    } catch (e) { console.error(e); }
     setLoading(false);
   }, [filters]);
 
@@ -40,55 +39,53 @@ export default function HomePage() {
   async function handleStatusChange(id: string, status: Lead['status']) {
     setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l));
     await leadsApi.update(id, { status });
-    fetchData();
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      {/* Nav */}
-      <nav className="lh-nav">
-        <div className="lh-nav-logo">
-          <div className="lh-nav-icon"><Zap size={16} color="#fff" /></div>
-          <span className="lh-nav-title">LeadHunter <span>Pro</span></span>
+    <>
+      {/* Topbar */}
+      <div className="topbar">
+        <div className="topbar-breadcrumb">
+          <span>Dashboard</span>
+          <span className="sep">/</span>
+          <span className="current">Lead Overview</span>
         </div>
-        <div className="lh-nav-right">
-          <span className="lh-count-pill">{stats.total} leads</span>
-          <button className="lh-icon-btn" onClick={fetchData} title="Refresh">
+        <div className="topbar-right">
+          <div className="topbar-search">
+            <Search size={14} style={{ color: '#a0aec0', flexShrink: 0 }} />
+            <input placeholder="Global search..." />
+          </div>
+          <button className="topbar-icon-btn" onClick={fetchData} title="Refresh">
             <RefreshCw size={15} style={{ animation: loading ? 'spin 0.8s linear infinite' : 'none' }} />
           </button>
+          <button className="topbar-icon-btn"><Bell size={15} /></button>
+          <button className="topbar-icon-btn"><HelpCircle size={15} /></button>
+          <div className="topbar-avatar">U</div>
         </div>
-      </nav>
+      </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 24px' }}>
-        {/* Page header */}
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>
-            Lead Dashboard
-          </h1>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>
-            Businesses from Google Maps — analyzed and ready for outreach
-          </p>
-        </div>
+      {/* Page content */}
+      <div className="page-body">
+        <h1 className="page-title">Lead Dashboard</h1>
+        <p className="page-subtitle">Businesses from Google Maps — analyzed and ready for outreach.</p>
 
         <StatsBar stats={stats} />
         <LeadFilters filters={filters} onChange={setFilters} />
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '80px 24px', background: 'var(--surface)', borderRadius: 14, border: '1px solid var(--border2)' }}>
-            <RefreshCw size={20} style={{ color: '#6366f1', animation: 'spin 0.8s linear infinite', marginBottom: 12 }} />
-            <div style={{ fontSize: 13, color: '#64748b', marginTop: 10 }}>Loading leads...</div>
+          <div className="table-card" style={{ textAlign: 'center', padding: '60px 24px' }}>
+            <RefreshCw size={20} style={{ color: '#6366f1', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+            <div style={{ fontSize: 13, color: '#a0aec0', marginTop: 10 }}>Loading leads...</div>
           </div>
         ) : (
           <LeadTable leads={leads} onStatusChange={handleStatusChange} />
         )}
-      </main>
+      </div>
 
       {outreachLead && (
-        <OutreachModal
-          leadId={outreachLead.id}
-          leadName={outreachLead.name}
+        <OutreachModal leadId={outreachLead.id} leadName={outreachLead.name}
           onClose={() => setOutreachLead(null)}
           onMarkContacted={async () => {
             await handleStatusChange(outreachLead.id, 'contacted');
@@ -96,6 +93,6 @@ export default function HomePage() {
           }}
         />
       )}
-    </div>
+    </>
   );
 }
