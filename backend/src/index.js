@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors({
   origin: [
+    'https://leadhunter-pro-pied.vercel.app',
     'https://leadhunter-dashboard.vercel.app',
     'http://localhost:3000',
     'chrome-extension://*',
