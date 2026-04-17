@@ -43,13 +43,22 @@ export default function LeadTable({ leads, onStatusChange }: Props) {
       {/* Export bar */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs text-slate-500">{leads.length} leads shown</span>
-        <a
-          href={leadsApi.exportCsvUrl()}
-          download="leads.csv"
-          className="inline-flex items-center gap-1.5 text-xs bg-[#1a1a2e] border border-[#2d2d3d] hover:border-indigo-500 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors"
-        >
-          <Download className="w-3.5 h-3.5" /> Export CSV
-        </a>
+        <div className="flex gap-2">
+          <a
+            href={leadsApi.exportXlsxUrl()}
+            download="leads.xlsx"
+            className="inline-flex items-center gap-1.5 text-xs bg-emerald-950 border border-emerald-800 hover:border-emerald-500 text-emerald-400 hover:text-emerald-300 px-3 py-1.5 rounded-lg transition-colors font-semibold"
+          >
+            <Download className="w-3.5 h-3.5" /> Export Excel
+          </a>
+          <a
+            href={leadsApi.exportCsvUrl()}
+            download="leads.csv"
+            className="inline-flex items-center gap-1.5 text-xs bg-[#1a1a2e] border border-[#2d2d3d] hover:border-indigo-500 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" /> CSV
+          </a>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-[#2d2d3d]">

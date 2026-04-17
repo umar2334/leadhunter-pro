@@ -2,6 +2,7 @@ import express from 'express';
 import { analyzeWebsite } from '../services/websiteAnalyzer.js';
 import { generateOutreach } from '../services/geminiService.js';
 import { supabase } from '../services/supabaseClient.js';
+import * as XLSX from 'xlsx';
 
 const router = express.Router();
 
@@ -63,6 +64,50 @@ router.post('/bulk-save', async (req, res, next) => {
     const { data, error } = await supabase.from('leads').upsert(rows, { onConflict: 'maps_url', ignoreDuplicates: true }).select();
     if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true, saved: data.length, leads: data });
+  } catch (err) { next(err); }
+});
+
+// GET /leads/export.xlsx — Excel file
+router.get('/export.xlsx', async (req, res, next) => {
+  try {
+    const { data, error } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
+    if (error) return res.status(500).json({ error: error.message });
+
+    const rows = data.map(l => ({
+      'Business Name': l.name || '',
+      'Email': l.email || '',
+      'Phone': l.phone || '',
+      'Website': l.website || '',
+      'Address': l.address || '',
+      'Category': l.category || '',
+      'Rating': l.rating || '',
+      'Reviews': l.review_count || '',
+      'Opportunity': l.opportunity_type === 'no_website' ? '🔥 No Website'
+        : l.opportunity_type === 'weak_website' ? '⚠️ Weak Website' : '✅ Has Website',
+      'Website Score': l.analysis_score || '',
+      'Website Issues': Array.isArray(l.analysis_issues) ? l.analysis_issues.join('; ') : '',
+      'Summary': l.analysis_summary || '',
+      'Status': l.status || '',
+      'Date Added': l.created_at ? new Date(l.created_at).toLocaleDateString() : '',
+    }));
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(rows);
+
+    // Column widths
+    ws['!cols'] = [
+      { wch: 30 }, { wch: 30 }, { wch: 18 }, { wch: 30 },
+      { wch: 30 }, { wch: 20 }, { wch: 8 }, { wch: 8 },
+      { wch: 18 }, { wch: 12 }, { wch: 50 }, { wch: 50 },
+      { wch: 12 }, { wch: 14 },
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="leads.xlsx"');
+    res.send(buf);
   } catch (err) { next(err); }
 });
 

@@ -65,4 +65,5 @@ export const leadsApi = {
   outreach: (id: string) => api<OutreachMessages>(`/leads/${id}/outreach`, { method: 'POST' }),
   analyze: (url: string) => api<any>('/analyze', { method: 'POST', body: JSON.stringify({ url }) }),
   exportCsvUrl: () => `${BASE}/leads/export.csv`,
+  exportXlsxUrl: () => `${BASE}/leads/export.xlsx`,
 };
