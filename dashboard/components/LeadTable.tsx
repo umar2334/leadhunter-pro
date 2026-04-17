@@ -49,6 +49,7 @@ export default function LeadTable({ leads, onStatusChange, onDelete, selectedIds
 
   return (
     <div className="table-card">
+      <div style={{ overflowX: 'auto' }}>
       <table className="data-table">
         <thead>
           <tr>
@@ -85,13 +86,31 @@ export default function LeadTable({ leads, onStatusChange, onDelete, selectedIds
 
                 {/* Business */}
                 <td style={{ minWidth: 160 }}>
-                  <div className="lead-name">{lead.name}</div>
-                  {lead.address && (
-                    <div className="lead-sub">
-                      <MapPin size={10} style={{ flexShrink: 0 }} />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>{lead.address}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                    <div>
+                      <div className="lead-name">{lead.name}</div>
+                      {lead.address && (
+                        <div className="lead-sub">
+                          <MapPin size={10} style={{ flexShrink: 0 }} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>{lead.address}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
+                    <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                      <Link href={`/leads/${lead.id}`}
+                        style={{ fontSize: 11, fontWeight: 600, color: '#6366f1', background: '#eff6ff', border: '1px solid #c7d2fe', borderRadius: 5, padding: '3px 8px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                        View
+                      </Link>
+                      <button
+                        onClick={() => { if (confirm(`Delete "${lead.name}"?`)) onDelete(lead.id); }}
+                        style={{ background: '#fef2f2', border: '1px solid #fca5a5', cursor: 'pointer', color: '#ef4444', padding: '3px 6px', borderRadius: 5, display: 'flex', alignItems: 'center', transition: 'all 0.15s' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#ef4444'; (e.currentTarget as HTMLButtonElement).style.color = '#fff'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2'; (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'; }}
+                        title="Delete lead">
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </div>
                 </td>
 
                 {/* Category */}
@@ -191,6 +210,7 @@ export default function LeadTable({ leads, onStatusChange, onDelete, selectedIds
           })}
         </tbody>
       </table>
+      </div>
 
       {/* Footer */}
       <div className="table-footer">
