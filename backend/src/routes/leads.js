@@ -157,6 +157,50 @@ router.get('/stats', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /leads/analytics
+router.get('/analytics', async (req, res, next) => {
+  try {
+    const { data, error } = await supabase.from('leads').select('created_at, opportunity_type, status, category, analysis_score').order('created_at', { ascending: true });
+    if (error) return res.status(500).json({ error: error.message });
+
+    // Daily counts — last 30 days
+    const daily = {};
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      daily[d.toISOString().slice(0, 10)] = 0;
+    }
+    data.forEach(l => { const k = l.created_at?.slice(0, 10); if (k && daily[k] !== undefined) daily[k]++; });
+
+    // Category breakdown (top 8)
+    const cats = {};
+    data.forEach(l => { if (l.category) cats[l.category] = (cats[l.category] || 0) + 1; });
+    const topCategories = Object.entries(cats).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, count]) => ({ name, count }));
+
+    // Avg score
+    const scored = data.filter(l => l.analysis_score !== null);
+    const avgScore = scored.length ? Math.round(scored.reduce((s, l) => s + l.analysis_score, 0) / scored.length) : 0;
+
+    res.json({
+      daily: Object.entries(daily).map(([date, count]) => ({ date, count })),
+      opportunity: {
+        no_website: data.filter(l => l.opportunity_type === 'no_website').length,
+        weak_website: data.filter(l => l.opportunity_type === 'weak_website').length,
+        has_website: data.filter(l => l.opportunity_type === 'has_website').length,
+      },
+      status: {
+        new: data.filter(l => l.status === 'new').length,
+        contacted: data.filter(l => l.status === 'contacted').length,
+        replied: data.filter(l => l.status === 'replied').length,
+        converted: data.filter(l => l.status === 'converted').length,
+        dead: data.filter(l => l.status === 'dead').length,
+      },
+      topCategories,
+      avgScore,
+      total: data.length,
+    });
+  } catch (err) { next(err); }
+});
+
 // GET /leads/:id
 router.get('/:id', async (req, res, next) => {
   try {

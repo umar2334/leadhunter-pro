@@ -66,4 +66,5 @@ export const leadsApi = {
   analyze: (url: string) => api<any>('/analyze', { method: 'POST', body: JSON.stringify({ url }) }),
   exportCsvUrl: () => `${BASE}/leads/export.csv`,
   exportXlsxUrl: () => `${BASE}/leads/export.xlsx`,
+  analytics: () => api<any>('/leads/analytics'),
 };

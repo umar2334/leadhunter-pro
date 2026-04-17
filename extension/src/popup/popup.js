@@ -35,40 +35,36 @@ function renderLeadCard(lead) {
   let analysisHtml = '';
 
   if (opportunity_type === 'no_website') {
-    badgeHtml = `<div class="badge badge-fire">🔥 HIGH OPPORTUNITY — No Website</div>`;
-  } else if (opportunity_type === 'weak_website') {
-    const score = analysis?.score ?? 0;
-    const fill = Math.max(score, 4);
-    const color = score < 40 ? '#ef4444' : score < 65 ? '#f97316' : '#eab308';
-    badgeHtml = `<div class="badge badge-weak">⚠️ Weak Website — Score: ${score}/100</div>`;
-    analysisHtml = `
-      <div class="score-row">
-        <span class="score-label">Website Score</span>
-        <div class="score-bar"><div class="score-fill" style="width:${fill}%;background:${color}"></div></div>
-        <span class="score-num">${score}/100</span>
-      </div>
-      ${analysis?.issues?.length ? `<div class="issues">${analysis.issues.slice(0, 4).map(i => `<div class="issue-item">${i}</div>`).join('')}</div>` : ''}
-      <div class="summary">"${analysis?.summary || ''}"</div>
-    `;
+    badgeHtml = `<div class="badge badge-fire">🔥 High Opportunity — No Website</div>`;
   } else {
     const score = analysis?.score ?? 0;
-    badgeHtml = `<div class="badge badge-ok">✅ Has Website — Score: ${score}/100</div>`;
-    if (analysis?.issues?.length) {
-      analysisHtml = `<div class="issues">${analysis.issues.slice(0, 3).map(i => `<div class="issue-item">${i}</div>`).join('')}</div>`;
-    }
+    const fill = Math.max(score, 3);
+    const color = score < 40 ? '#ef4444' : score < 65 ? '#f97316' : '#10b981';
+    badgeHtml = opportunity_type === 'weak_website'
+      ? `<div class="badge badge-weak">⚠️ Weak Website</div>`
+      : `<div class="badge badge-ok">✅ Has Website</div>`;
+    analysisHtml = `
+      <div class="score-section">
+        <div class="score-header">
+          <span class="score-label">Website Score</span>
+          <span class="score-num" style="color:${color}">${score}</span>
+        </div>
+        <div class="score-track"><div class="score-fill" style="width:${fill}%;background:${color}"></div></div>
+      </div>
+      ${analysis?.issues?.length ? `<div class="issues">${analysis.issues.slice(0, 3).map(i => `<div class="issue-row">${escHtml(i)}</div>`).join('')}</div>` : ''}
+      ${analysis?.summary ? `<div class="summary">"${escHtml(analysis.summary)}"</div>` : ''}
+    `;
   }
 
   body.innerHTML = `
     <div class="card">
-      <div class="business-name">${escHtml(name || 'Unknown Business')}</div>
-      <div class="business-meta">
-        ${category ? `🏷 ${escHtml(category)}` : ''}
-        ${address ? `&nbsp;· 📍 ${escHtml(address)}` : ''}
-        ${phone ? `<br>📞 ${escHtml(phone)}` : ''}
-        ${email ? `<br>📧 <span style="color:#6366f1">${escHtml(email)}</span>` : ''}
-        ${rating ? `<br>⭐ ${rating}${reviewCount ? ` (${reviewCount} reviews)` : ''}` : ''}
-        ${website ? `<br>🌐 <a href="${escHtml(website)}" target="_blank" style="color:#6366f1;font-size:10px">${truncate(website, 40)}</a>` : ''}
-      </div>
+      <div class="biz-name">${escHtml(name || 'Unknown Business')}</div>
+      ${category ? `<div class="biz-row"><span class="icon">🏷</span>${escHtml(category)}</div>` : ''}
+      ${address ? `<div class="biz-row"><span class="icon">📍</span>${escHtml(address)}</div>` : ''}
+      ${phone ? `<div class="biz-row"><span class="icon">📞</span>${escHtml(phone)}</div>` : ''}
+      ${email ? `<div class="biz-row"><span class="icon">📧</span><span class="biz-email">${escHtml(email)}</span></div>` : ''}
+      ${rating ? `<div class="biz-row"><span class="icon">⭐</span>${rating}${reviewCount ? ` (${reviewCount} reviews)` : ''}</div>` : ''}
+      ${website ? `<div class="biz-row"><span class="icon">🌐</span><a href="${escHtml(website)}" target="_blank">${truncate(website.replace(/^https?:\/\//, ''), 32)}</a></div>` : ''}
       ${badgeHtml}
       ${analysisHtml}
     </div>
@@ -84,10 +80,10 @@ function renderLeadCard(lead) {
 
 function renderSaved(lead) {
   body.innerHTML = `
-    <div class="card" style="text-align:center;padding:20px">
-      <div style="font-size:24px;margin-bottom:8px">✅</div>
-      <div style="font-size:14px;font-weight:700;color:#4ade80">Saved!</div>
-      <div style="font-size:12px;color:#64748b;margin-top:4px">${escHtml(lead.name)} added to dashboard</div>
+    <div class="success-card">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Saved!</div>
+      <div class="success-sub" style="color:#4a5568">${escHtml(lead.name)} added to dashboard</div>
     </div>
     <button class="btn btn-primary" style="margin-top:10px" id="openDashBtn">📊 Open Dashboard</button>
     <button class="btn btn-secondary" id="anotherBtn">Extract Another</button>
@@ -104,10 +100,10 @@ function renderSaved(lead) {
 
 function renderBulkResult(saved, total) {
   body.innerHTML = `
-    <div class="card" style="text-align:center;padding:20px">
-      <div style="font-size:24px;margin-bottom:8px">⚡</div>
-      <div style="font-size:14px;font-weight:700;color:#4ade80">${saved} Leads Saved!</div>
-      <div style="font-size:12px;color:#64748b;margin-top:4px">Extracted ${total} businesses from the list</div>
+    <div class="success-card">
+      <div class="success-icon">⚡</div>
+      <div class="success-title">${saved} Leads Saved!</div>
+      <div class="success-sub" style="color:#4a5568">Extracted ${total} businesses from the search results</div>
     </div>
     <button class="btn btn-primary" style="margin-top:10px" id="openDashBtn">📊 Open Dashboard</button>
     <button class="btn btn-secondary" id="anotherBtn">Extract More</button>
