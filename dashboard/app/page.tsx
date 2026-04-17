@@ -48,26 +48,38 @@ export default function HomePage() {
     return () => clearTimeout(t);
   }, [fetchData]);
 
-  // Poll for new leads every 30s
+  // Poll every 30s — auto-refresh list when new leads arrive
   useEffect(() => {
     const poll = setInterval(async () => {
       try {
         const sd = await leadsApi.stats();
         const stored = parseInt(localStorage.getItem('lh_seen_count') || '0');
-        if (sd.total > stored) setNotifCount(sd.total - stored);
+        if (sd.total > stored) {
+          setNotifCount(sd.total - stored);
+          fetchData(); // auto-refresh so new leads appear at top
+        }
       } catch {}
     }, 30000);
     return () => clearInterval(poll);
-  }, []);
+  }, [fetchData]);
 
   function clearNotif() {
     localStorage.setItem('lh_seen_count', String(stats.total));
     setNotifCount(0);
+    fetchData();
   }
 
   async function handleStatusChange(id: string, status: Lead['status']) {
     setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l));
     await leadsApi.update(id, { status });
+  }
+
+  async function handleDelete(id: string) {
+    setLeads(prev => prev.filter(l => l.id !== id));
+    setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
+    await leadsApi.delete(id);
+    const sd = await leadsApi.stats();
+    setStats(sd);
   }
 
   function toggleSelect(id: string) {
@@ -133,7 +145,7 @@ export default function HomePage() {
             <div style={{ fontSize: 13, color: '#a0aec0', marginTop: 10 }}>Loading leads...</div>
           </div>
         ) : (
-          <LeadTable leads={leads} onStatusChange={handleStatusChange}
+          <LeadTable leads={leads} onStatusChange={handleStatusChange} onDelete={handleDelete}
             selectedIds={selectedIds} onToggle={toggleSelect} onToggleAll={toggleAll} />
         )}
       </div>
