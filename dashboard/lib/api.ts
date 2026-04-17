@@ -7,6 +7,7 @@ export interface Lead {
   id: string;
   name: string;
   phone: string | null;
+  email: string | null;
   website: string | null;
   address: string | null;
   category: string | null;
@@ -56,19 +57,12 @@ export const leadsApi = {
     const qs = new URLSearchParams(params).toString();
     return api<{ leads: Lead[]; total: number }>(`/leads${qs ? '?' + qs : ''}`);
   },
-
   get: (id: string) => api<Lead>(`/leads/${id}`),
-
   update: (id: string, body: Partial<Pick<Lead, 'status' | 'notes' | 'outreach_sent'>>) =>
     api<Lead>(`/leads/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
-
   delete: (id: string) => api<{ success: boolean }>(`/leads/${id}`, { method: 'DELETE' }),
-
   stats: () => api<Stats>('/leads/stats'),
-
-  outreach: (id: string) =>
-    api<OutreachMessages>(`/leads/${id}/outreach`, { method: 'POST' }),
-
-  analyze: (url: string) =>
-    api<any>('/analyze', { method: 'POST', body: JSON.stringify({ url }) }),
+  outreach: (id: string) => api<OutreachMessages>(`/leads/${id}/outreach`, { method: 'POST' }),
+  analyze: (url: string) => api<any>('/analyze', { method: 'POST', body: JSON.stringify({ url }) }),
+  exportCsvUrl: () => `${BASE}/leads/export.csv`,
 };
