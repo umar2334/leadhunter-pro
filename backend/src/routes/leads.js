@@ -49,17 +49,24 @@ router.post('/extract', async (req, res, next) => {
 router.post('/save', async (req, res, next) => {
   try {
     const lead = req.body;
-    const { data, error } = await supabase.from('leads').upsert({
+    const row = {
       name: lead.name, phone: lead.phone || null, email: lead.email || null,
       website: lead.website || null, address: lead.address || null,
       category: lead.category || null, rating: lead.rating || null,
       review_count: lead.reviewCount || null, opportunity_type: lead.opportunity_type,
       analysis_score: lead.analysis_score ?? null, analysis_issues: lead.analysis_issues ?? [],
       analysis_summary: lead.analysis_summary ?? null, maps_url: lead.mapsUrl || null,
-      whatsapp_number: lead.whatsapp_number || null,
-      website_phone: lead.website_phone || null,
       status: 'new',
-    }, { onConflict: 'maps_url', ignoreDuplicates: false }).select().single();
+    };
+    if (lead.whatsapp_number) row.whatsapp_number = lead.whatsapp_number;
+    if (lead.website_phone) row.website_phone = lead.website_phone;
+
+    let { data, error } = await supabase.from('leads').upsert(row, { onConflict: 'maps_url', ignoreDuplicates: false }).select().single();
+    // If new columns don't exist yet, retry without them
+    if (error && error.message?.includes('column')) {
+      delete row.whatsapp_number; delete row.website_phone;
+      ({ data, error } = await supabase.from('leads').upsert(row, { onConflict: 'maps_url', ignoreDuplicates: false }).select().single());
+    }
     if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true, lead: data });
   } catch (err) { next(err); }
@@ -78,11 +85,9 @@ router.post('/bulk-save', async (req, res, next) => {
       opportunity_type: lead.opportunity_type || 'no_website',
       analysis_score: lead.analysis_score ?? null, analysis_issues: lead.analysis_issues ?? [],
       analysis_summary: lead.analysis_summary ?? null, maps_url: lead.mapsUrl || null,
-      whatsapp_number: lead.whatsapp_number || null,
-      website_phone: lead.website_phone || null,
       status: 'new',
     }));
-    const { data, error } = await supabase.from('leads').upsert(rows, { onConflict: 'maps_url', ignoreDuplicates: true }).select();
+    let { data, error } = await supabase.from('leads').upsert(rows, { onConflict: 'maps_url', ignoreDuplicates: true }).select();
     if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true, saved: data.length, leads: data });
   } catch (err) { next(err); }
