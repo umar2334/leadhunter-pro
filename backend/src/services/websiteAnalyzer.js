@@ -11,6 +11,8 @@ export async function analyzeWebsite(rawUrl) {
     summary: '',
     score_breakdown: {},
     email: null,
+    whatsapp_number: null,
+    website_phone: null,
   };
 
   let url = rawUrl.trim();
@@ -73,8 +75,34 @@ export async function analyzeWebsite(rawUrl) {
 
   report.email = [...emailSet][0] || null;
 
+  // ── WhatsApp number extraction ────────────────────────────────────────────
+  report.whatsapp_number = null;
+  report.website_phone = null;
+
+  // wa.me links → extract phone number
+  $('a[href*="wa.me"]').each((_, el) => {
+    if (report.whatsapp_number) return;
+    const href = $(el).attr('href') || '';
+    const match = href.match(/wa\.me\/(\+?[\d]{7,15})/);
+    if (match) report.whatsapp_number = '+' + match[1].replace(/^\+/, '');
+  });
+
+  // Also scan raw HTML for wa.me URLs (sometimes in onclick or data attrs)
+  if (!report.whatsapp_number) {
+    const waMatch = html.match(/wa\.me\/(\+?[\d]{7,15})/);
+    if (waMatch) report.whatsapp_number = '+' + waMatch[1].replace(/^\+/, '');
+  }
+
+  // tel: links → website phone number
+  const telPhones = new Set();
+  $('a[href^="tel:"]').each((_, el) => {
+    const raw = $(el).attr('href').replace('tel:', '').replace(/\s/g, '').trim();
+    if (raw.length >= 7) telPhones.add(raw);
+  });
+  report.website_phone = [...telPhones][0] || null;
+
   // If no email on homepage, try /contact page
-  if (!report.email) {
+  if (!report.email || !report.whatsapp_number || !report.website_phone) {
     try {
       const contactUrl = new URL('/contact', finalUrl).href;
       const controller2 = new AbortController();
@@ -86,12 +114,33 @@ export async function analyzeWebsite(rawUrl) {
       clearTimeout(tid2);
       if (res2.ok) {
         const html2 = await res2.text();
-        for (const match of (html2.match(emailRegex) || [])) {
-          const e = match.toLowerCase();
-          if (!SPAM.some(s => e.includes(s)) && e.length < 60) {
-            report.email = e;
-            break;
+        const $2 = cheerio.load(html2);
+
+        if (!report.email) {
+          for (const match of (html2.match(emailRegex) || [])) {
+            const e = match.toLowerCase();
+            if (!SPAM.some(s => e.includes(s)) && e.length < 60) { report.email = e; break; }
           }
+        }
+
+        if (!report.whatsapp_number) {
+          const waM = html2.match(/wa\.me\/(\+?[\d]{7,15})/);
+          if (waM) report.whatsapp_number = '+' + waM[1].replace(/^\+/, '');
+          else {
+            $2('a[href*="wa.me"]').each((_, el) => {
+              if (report.whatsapp_number) return;
+              const m = ($2(el).attr('href') || '').match(/wa\.me\/(\+?[\d]{7,15})/);
+              if (m) report.whatsapp_number = '+' + m[1].replace(/^\+/, '');
+            });
+          }
+        }
+
+        if (!report.website_phone) {
+          $2('a[href^="tel:"]').each((_, el) => {
+            if (report.website_phone) return;
+            const raw = $2(el).attr('href').replace('tel:', '').replace(/\s/g, '').trim();
+            if (raw.length >= 7) report.website_phone = raw;
+          });
         }
       }
     } catch {}

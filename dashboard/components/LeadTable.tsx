@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { Lead } from '@/lib/api';
-import { Globe, MapPin, Mail, Phone } from 'lucide-react';
+import { Globe, MapPin, Mail, Phone, MessageSquare } from 'lucide-react';
 
 interface Props {
   leads: Lead[];
@@ -58,6 +58,7 @@ export default function LeadTable({ leads, onStatusChange, selectedIds, onToggle
             <th>Business</th>
             <th>Category</th>
             <th>Phone</th>
+            <th>WhatsApp</th>
             <th>Email</th>
             <th>Website</th>
             <th>Opportunity</th>
@@ -101,6 +102,24 @@ export default function LeadTable({ leads, onStatusChange, selectedIds, onToggle
                     <a href={`tel:${lead.phone}`} style={{ fontSize: 13, color: '#2d3748', display: 'flex', alignItems: 'center', gap: 5, textDecoration: 'none', fontWeight: 500 }}
                       onMouseEnter={e => (e.currentTarget.style.color = '#6366f1')} onMouseLeave={e => (e.currentTarget.style.color = '#2d3748')}>
                       <Phone size={12} style={{ color: '#a0aec0', flexShrink: 0 }} />{lead.phone}
+                    </a>
+                  ) : <span style={{ color: '#e2e8f0', fontSize: 13 }}>—</span>}
+                </td>
+
+                {/* WhatsApp — own column */}
+                <td style={{ minWidth: 130 }}>
+                  {lead.whatsapp_number ? (
+                    <a href={`https://wa.me/${lead.whatsapp_number.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
+                      style={{ fontSize: 13, color: '#16a34a', display: 'flex', alignItems: 'center', gap: 5, textDecoration: 'none', fontWeight: 600 }}
+                      onMouseEnter={e => (e.currentTarget.style.color = '#15803d')} onMouseLeave={e => (e.currentTarget.style.color = '#16a34a')}>
+                      <MessageSquare size={12} style={{ flexShrink: 0 }} />{lead.whatsapp_number}
+                    </a>
+                  ) : lead.phone ? (
+                    <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
+                      style={{ fontSize: 12, color: '#a0aec0', display: 'flex', alignItems: 'center', gap: 5, textDecoration: 'none' }}
+                      onMouseEnter={e => (e.currentTarget.style.color = '#16a34a')} onMouseLeave={e => (e.currentTarget.style.color = '#a0aec0')}>
+                      <MessageSquare size={11} style={{ flexShrink: 0 }} />
+                      <span style={{ fontSize: 11 }}>Try Maps #</span>
                     </a>
                   ) : <span style={{ color: '#e2e8f0', fontSize: 13 }}>—</span>}
                 </td>

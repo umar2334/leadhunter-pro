@@ -131,6 +131,23 @@ export default function LeadDetailPage() {
                     <button className="copy-btn" onClick={() => copyText(lead.phone!, 'phone')}>
                       {copied === 'phone' ? <Check size={12} style={{ color: '#10b981' }} /> : <Copy size={12} />}
                     </button>
+                    {lead.website_phone && lead.website_phone !== lead.phone && (
+                      <span style={{ fontSize: 10, background: '#fff7ed', color: '#c2410c', border: '1px solid #fdba74', borderRadius: 4, padding: '1px 6px', fontWeight: 700, marginLeft: 4 }}>
+                        ⚠️ Site: {lead.website_phone}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {lead.whatsapp_number && (
+                  <div className="contact-row" style={{ margin: 0 }}>
+                    <a href={`https://wa.me/${lead.whatsapp_number.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
+                      style={{ color: '#16a34a', fontWeight: 600 }}>
+                      <MessageSquare size={14} style={{ color: '#16a34a' }} />
+                      {lead.whatsapp_number}
+                    </a>
+                    <button className="copy-btn" onClick={() => copyText(lead.whatsapp_number!, 'wa')}>
+                      {copied === 'wa' ? <Check size={12} style={{ color: '#10b981' }} /> : <Copy size={12} />}
+                    </button>
                   </div>
                 )}
                 {lead.email && (

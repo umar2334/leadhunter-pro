@@ -20,9 +20,12 @@ Lead details:
 - Business: ${lead.name}
 - Type: ${lead.category || 'local business'}
 - Location: ${lead.address || 'Dubai, UAE'}
-- Phone: ${lead.phone || 'not listed'}
+- Maps Phone: ${lead.phone || 'not listed'}
+- WhatsApp Number: ${lead.whatsapp_number || lead.phone || 'not listed'}
+- Website Phone: ${lead.website_phone || 'same as Maps'}
 - Email: ${lead.email || 'not listed'}
 - Website situation: ${websiteContext}
+${lead.whatsapp_number && lead.phone && lead.whatsapp_number !== lead.phone ? `- NOTE: The business WhatsApp (${lead.whatsapp_number}) is DIFFERENT from their Maps number (${lead.phone}) — use the WhatsApp number when referencing how to reach them on WhatsApp.` : ''}
 
 Write 3 personalized outreach messages. Return ONLY raw JSON, no markdown, no code block:
 

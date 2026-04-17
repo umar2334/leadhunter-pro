@@ -18,6 +18,8 @@ export interface Lead {
   analysis_issues: string[] | null;
   analysis_summary: string | null;
   maps_url: string | null;
+  whatsapp_number: string | null;
+  website_phone: string | null;
   status: LeadStatus;
   notes: string | null;
   outreach_sent: boolean;

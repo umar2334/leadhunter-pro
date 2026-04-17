@@ -18,6 +18,21 @@ router.post('/extract', async (req, res, next) => {
       lead.analysis_issues = lead.analysis.issues;
       lead.analysis_summary = lead.analysis.summary;
       lead.email = lead.analysis.email || null;
+      lead.whatsapp_number = lead.analysis.whatsapp_number || null;
+      lead.website_phone = lead.analysis.website_phone || null;
+
+      // Flag phone mismatch: Maps phone ≠ website phone
+      if (lead.phone && lead.website_phone) {
+        const normalize = p => p.replace(/[\s\-().+]/g, '');
+        const mapsNorm = normalize(lead.phone);
+        const siteNorm = normalize(lead.website_phone);
+        if (!mapsNorm.endsWith(siteNorm.slice(-8)) && !siteNorm.endsWith(mapsNorm.slice(-8))) {
+          lead.analysis_issues = [
+            `⚠️ Phone mismatch — Maps: ${lead.phone} vs Website: ${lead.website_phone}`,
+            ...lead.analysis_issues,
+          ];
+        }
+      }
     } else {
       lead.opportunity_type = 'no_website';
       lead.analysis = { exists: false, score: 0, issues: ['No website found'], summary: 'Business has no website — high opportunity for a new build.', email: null };
@@ -40,7 +55,10 @@ router.post('/save', async (req, res, next) => {
       category: lead.category || null, rating: lead.rating || null,
       review_count: lead.reviewCount || null, opportunity_type: lead.opportunity_type,
       analysis_score: lead.analysis_score ?? null, analysis_issues: lead.analysis_issues ?? [],
-      analysis_summary: lead.analysis_summary ?? null, maps_url: lead.mapsUrl || null, status: 'new',
+      analysis_summary: lead.analysis_summary ?? null, maps_url: lead.mapsUrl || null,
+      whatsapp_number: lead.whatsapp_number || null,
+      website_phone: lead.website_phone || null,
+      status: 'new',
     }, { onConflict: 'maps_url', ignoreDuplicates: false }).select().single();
     if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true, lead: data });
@@ -59,7 +77,10 @@ router.post('/bulk-save', async (req, res, next) => {
       review_count: lead.reviewCount || null,
       opportunity_type: lead.opportunity_type || 'no_website',
       analysis_score: lead.analysis_score ?? null, analysis_issues: lead.analysis_issues ?? [],
-      analysis_summary: lead.analysis_summary ?? null, maps_url: lead.mapsUrl || null, status: 'new',
+      analysis_summary: lead.analysis_summary ?? null, maps_url: lead.mapsUrl || null,
+      whatsapp_number: lead.whatsapp_number || null,
+      website_phone: lead.website_phone || null,
+      status: 'new',
     }));
     const { data, error } = await supabase.from('leads').upsert(rows, { onConflict: 'maps_url', ignoreDuplicates: true }).select();
     if (error) return res.status(500).json({ error: error.message });

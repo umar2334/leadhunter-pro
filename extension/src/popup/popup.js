@@ -30,7 +30,7 @@ function renderLoading(message) {
 }
 
 function renderLeadCard(lead) {
-  const { name, phone, address, category, website, analysis, opportunity_type, rating, reviewCount, email } = lead;
+  const { name, phone, address, category, website, analysis, opportunity_type, rating, reviewCount, email, whatsapp_number, website_phone } = lead;
   let badgeHtml = '';
   let analysisHtml = '';
 
@@ -61,7 +61,8 @@ function renderLeadCard(lead) {
       <div class="biz-name">${escHtml(name || 'Unknown Business')}</div>
       ${category ? `<div class="biz-row"><span class="icon">🏷</span>${escHtml(category)}</div>` : ''}
       ${address ? `<div class="biz-row"><span class="icon">📍</span>${escHtml(address)}</div>` : ''}
-      ${phone ? `<div class="biz-row"><span class="icon">📞</span>${escHtml(phone)}</div>` : ''}
+      ${phone ? `<div class="biz-row"><span class="icon">📞</span>${escHtml(phone)}${website_phone && website_phone !== phone ? `<span style="font-size:10px;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;border-radius:4px;padding:1px 6px;font-weight:700;margin-left:6px">⚠️ Site: ${escHtml(website_phone)}</span>` : ''}</div>` : ''}
+      ${whatsapp_number ? `<div class="biz-row"><span class="icon">💬</span><a href="https://wa.me/${whatsapp_number.replace(/\D/g,'')}" target="_blank" style="color:#16a34a;font-weight:700">${escHtml(whatsapp_number)}</a></div>` : ''}
       ${email ? `<div class="biz-row"><span class="icon">📧</span><span class="biz-email">${escHtml(email)}</span></div>` : ''}
       ${rating ? `<div class="biz-row"><span class="icon">⭐</span>${rating}${reviewCount ? ` (${reviewCount} reviews)` : ''}</div>` : ''}
       ${website ? `<div class="biz-row"><span class="icon">🌐</span><a href="${escHtml(website)}" target="_blank">${truncate(website.replace(/^https?:\/\//, ''), 32)}</a></div>` : ''}
