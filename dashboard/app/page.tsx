@@ -48,6 +48,13 @@ export default function HomePage() {
     return () => clearTimeout(t);
   }, [fetchData]);
 
+  // Refresh when user switches back to this tab (e.g. from extension)
+  useEffect(() => {
+    const onFocus = () => fetchData();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [fetchData]);
+
   // Poll every 30s — auto-refresh list when new leads arrive
   useEffect(() => {
     const poll = setInterval(async () => {
@@ -56,7 +63,7 @@ export default function HomePage() {
         const stored = parseInt(localStorage.getItem('lh_seen_count') || '0');
         if (sd.total > stored) {
           setNotifCount(sd.total - stored);
-          fetchData(); // auto-refresh so new leads appear at top
+          fetchData();
         }
       } catch {}
     }, 30000);
