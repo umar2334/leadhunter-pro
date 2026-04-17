@@ -1,4 +1,4 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const BASE = process.env.NEXT_PUBLIC_API_URL || 'https://leadhunter-pro-production.up.railway.app';
 
 export type OpportunityType = 'no_website' | 'weak_website' | 'has_website';
 export type LeadStatus = 'new' | 'contacted' | 'replied' | 'converted' | 'dead';
