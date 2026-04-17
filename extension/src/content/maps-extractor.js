@@ -61,46 +61,60 @@
   // ── Bulk extract: all business cards in search results list ─────────────
   function extractAllBusinesses() {
     const results = [];
-    // Google Maps result cards — multiple selector strategies
-    const cardSelectors = [
-      'a[href*="/maps/place/"]',
-      '[role="article"]',
-      '.Nv2PK',
-      '[data-result-index]',
-    ];
-
-    let cards = [];
-    for (const sel of cardSelectors) {
-      const found = [...document.querySelectorAll(sel)];
-      if (found.length > 2) { cards = found; break; }
-    }
-
     const seen = new Set();
-    for (const card of cards.slice(0, 50)) {
-      // Name
-      const nameEl = card.querySelector('.qBF1Pd, .fontHeadlineSmall, h3, [class*="fontHeadline"]') ||
-        card.querySelector('div[class*="fontBody"] + div') ||
-        card;
-      const name = nameEl?.textContent?.trim();
-      if (!name || seen.has(name) || name.length < 2) continue;
-      seen.add(name);
 
-      // Category
-      const spans = [...card.querySelectorAll('span, div')].filter(el => el.children.length === 0);
-      const category = spans.find(s => s.textContent?.trim().length > 2 && s.textContent?.trim().length < 40 && s !== nameEl)?.textContent?.trim() || null;
+    // All links pointing to a /maps/place/ URL — most reliable across Maps versions
+    const allPlaceLinks = [...document.querySelectorAll('a[href*="/maps/place/"]')];
 
-      // Rating
-      let rating = null;
-      const ratingEl = card.querySelector('[aria-label*="stars"]') ||
-        card.querySelector('span[aria-hidden]');
-      if (ratingEl) {
-        const m = (ratingEl.getAttribute('aria-label') || ratingEl.textContent)?.match(/[\d.]+/);
-        if (m) rating = parseFloat(m[0]);
+    for (const link of allPlaceLinks) {
+      if (results.length >= 50) break;
+
+      const href = link.href || '';
+      if (!href.includes('/maps/place/')) continue;
+
+      // Name: aria-label is most reliable, else first leaf text node inside link
+      let name = link.getAttribute('aria-label')?.trim() || null;
+
+      if (!name) {
+        // Walk children to find first meaningful text-only node
+        const leaves = [...link.querySelectorAll('*')].filter(el =>
+          el.children.length === 0 &&
+          el.textContent.trim().length > 1 &&
+          el.textContent.trim().length < 100
+        );
+        name = leaves[0]?.textContent?.trim() || null;
       }
 
-      // Maps URL
-      const linkEl = card.tagName === 'A' ? card : card.querySelector('a[href*="/maps/place/"]');
-      const mapsUrl = linkEl?.href || null;
+      if (!name || name.length < 2 || name.length > 120) continue;
+      if (seen.has(name)) continue;
+      seen.add(name);
+
+      // Rating from aria-label on stars element within the card's parent container
+      let rating = null;
+      const parent = link.closest('[jsaction]') || link.parentElement;
+      if (parent) {
+        const ratingEl = parent.querySelector('[aria-label*="star"]');
+        if (ratingEl) {
+          const m = ratingEl.getAttribute('aria-label')?.match(/[\d.]+/);
+          if (m) rating = parseFloat(m[0]);
+        }
+      }
+
+      // Category: second leaf text after the name, short text
+      let category = null;
+      if (parent) {
+        const leaves = [...parent.querySelectorAll('*')].filter(el =>
+          el.children.length === 0 &&
+          el.textContent.trim().length > 2 &&
+          el.textContent.trim().length < 50 &&
+          el.textContent.trim() !== name
+        );
+        const catEl = leaves.find(el => {
+          const t = el.textContent.trim();
+          return !t.match(/^\d/) && !t.includes('$') && !t.includes('·');
+        });
+        category = catEl?.textContent?.trim() || null;
+      }
 
       results.push({
         name,
@@ -109,7 +123,7 @@
         phone: null,
         website: null,
         address: null,
-        mapsUrl,
+        mapsUrl: href,
         extractedAt: new Date().toISOString(),
       });
     }
