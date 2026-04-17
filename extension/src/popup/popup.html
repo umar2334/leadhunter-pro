@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeadHunter Pro</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 360px;
+      min-height: 200px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f0f13;
+      color: #e2e8f0;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      letter-spacing: -0.3px;
+    }
+
+    .logo span { opacity: 0.75; font-weight: 400; }
+
+    .saved-count {
+      font-size: 11px;
+      background: rgba(255,255,255,0.2);
+      padding: 3px 8px;
+      border-radius: 20px;
+      color: white;
+    }
+
+    .body { padding: 14px; }
+
+    .status-msg {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 11px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn:hover:not(:disabled) { opacity: 0.88; }
+
+    .btn-primary { background: #6366f1; color: white; }
+    .btn-success { background: #22c55e; color: white; margin-top: 8px; }
+    .btn-secondary {
+      background: #1e1e2e;
+      color: #94a3b8;
+      border: 1px solid #2d2d3d;
+      margin-top: 6px;
+      font-size: 12px;
+      padding: 8px;
+    }
+
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2d2d3d;
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+
+    .business-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 4px;
+    }
+
+    .business-meta {
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    .badge-fire { background: #292310; color: #fbbf24; border: 1px solid #854d0e; }
+    .badge-weak { background: #1f1209; color: #f97316; border: 1px solid #7c2d12; }
+    .badge-ok   { background: #0a1f0a; color: #4ade80; border: 1px solid #14532d; }
+
+    .score-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
+
+    .score-label { font-size: 11px; color: #64748b; }
+
+    .score-bar {
+      height: 4px;
+      background: #2d2d3d;
+      border-radius: 2px;
+      flex: 1;
+      margin: 0 8px;
+    }
+
+    .score-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: #6366f1;
+    }
+
+    .score-num { font-size: 11px; font-weight: 700; color: #e2e8f0; }
+
+    .issues {
+      margin-top: 8px;
+      padding: 8px;
+      background: #0f0f18;
+      border-radius: 6px;
+    }
+
+    .issue-item {
+      font-size: 11px;
+      color: #94a3b8;
+      padding: 2px 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .issue-item::before { content: '•'; color: #f97316; }
+
+    .summary {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 6px;
+      line-height: 1.5;
+      font-style: italic;
+    }
+
+    .divider { height: 1px; background: #2d2d3d; margin: 10px 0; }
+
+    .loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      gap: 10px;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid #2d2d3d;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loader-text { font-size: 12px; color: #64748b; }
+
+    .not-maps {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      text-align: center;
+      gap: 8px;
+    }
+
+    .not-maps-icon { font-size: 28px; }
+    .not-maps-title { font-size: 13px; font-weight: 600; color: #94a3b8; }
+    .not-maps-sub { font-size: 11px; color: #475569; line-height: 1.5; }
+
+    .recent-section { margin-top: 14px; }
+    .recent-title { font-size: 11px; color: #475569; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+
+    .recent-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 9px;
+      background: #1a1a2e;
+      border: 1px solid #2d2d3d;
+      border-radius: 7px;
+      margin-bottom: 5px;
+    }
+
+    .recent-name { font-size: 12px; font-weight: 600; color: #e2e8f0; }
+    .recent-type { font-size: 10px; color: #64748b; }
+    .recent-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+    .rb-fire { background: #292310; color: #fbbf24; }
+    .rb-weak { background: #1f1209; color: #f97316; }
+    .rb-ok   { background: #0a1f0a; color: #4ade80; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="logo">LeadHunter <span>Pro</span></span>
+    <span class="saved-count" id="savedCount">0 saved</span>
+  </div>
+
+  <div class="body" id="mainBody">
+    <!-- Populated by popup.js -->
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
