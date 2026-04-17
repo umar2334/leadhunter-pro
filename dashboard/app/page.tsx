@@ -25,16 +25,10 @@ export default function HomePage() {
       if (filters.status) params.status = filters.status;
       if (filters.category) params.category = filters.category;
       if (filters.search) params.search = filters.search;
-
-      const [leadsData, statsData] = await Promise.all([
-        leadsApi.list(params),
-        leadsApi.stats(),
-      ]);
+      const [leadsData, statsData] = await Promise.all([leadsApi.list(params), leadsApi.stats()]);
       setLeads(leadsData.leads);
       setStats(statsData);
-    } catch (err) {
-      console.error('Failed to load data:', err);
-    }
+    } catch (err) { console.error(err); }
     setLoading(false);
   }, [filters]);
 
@@ -50,52 +44,44 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#08080f]">
-      {/* Top Nav */}
-      <nav className="border-b border-[#1e1e2e] bg-[#0a0a14]/80 backdrop-blur-md px-6 py-3.5 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
-            <Zap className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-white font-bold text-base tracking-tight">
-            LeadHunter <span className="text-indigo-400">Pro</span>
-          </span>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      {/* Nav */}
+      <nav className="lh-nav">
+        <div className="lh-nav-logo">
+          <div className="lh-nav-icon"><Zap size={16} color="#fff" /></div>
+          <span className="lh-nav-title">LeadHunter <span>Pro</span></span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="hidden sm:block text-xs text-slate-600 bg-[#12121e] border border-[#2d2d3d] px-2.5 py-1 rounded-full">
-            {stats.total} leads
-          </span>
-          <button onClick={fetchData}
-            className="text-slate-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-[#1a1a2e] border border-transparent hover:border-[#2d2d3d]">
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        <div className="lh-nav-right">
+          <span className="lh-count-pill">{stats.total} leads</span>
+          <button className="lh-icon-btn" onClick={fetchData} title="Refresh">
+            <RefreshCw size={15} style={{ animation: loading ? 'spin 0.8s linear infinite' : 'none' }} />
           </button>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 24px' }}>
         {/* Page header */}
-        <div className="mb-7 flex items-end justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-xl font-bold text-white tracking-tight">Lead Dashboard</h1>
-            <p className="text-slate-500 text-sm mt-0.5">
-              Businesses from Google Maps — analyzed and ready for outreach
-            </p>
-          </div>
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>
+            Lead Dashboard
+          </h1>
+          <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>
+            Businesses from Google Maps — analyzed and ready for outreach
+          </p>
         </div>
 
         <StatsBar stats={stats} />
         <LeadFilters filters={filters} onChange={setFilters} />
 
         {loading ? (
-          <div className="text-center py-24 text-slate-600 bg-[#0c0c18] rounded-2xl border border-[#2d2d3d]">
-            <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-3 text-indigo-500" />
-            <span className="text-sm text-slate-500">Loading leads...</span>
+          <div style={{ textAlign: 'center', padding: '80px 24px', background: 'var(--surface)', borderRadius: 14, border: '1px solid var(--border2)' }}>
+            <RefreshCw size={20} style={{ color: '#6366f1', animation: 'spin 0.8s linear infinite', marginBottom: 12 }} />
+            <div style={{ fontSize: 13, color: '#64748b', marginTop: 10 }}>Loading leads...</div>
           </div>
         ) : (
-          <LeadTable
-            leads={leads}
-            onStatusChange={handleStatusChange}
-          />
+          <LeadTable leads={leads} onStatusChange={handleStatusChange} />
         )}
       </main>
 
