@@ -2,25 +2,6 @@ const API_BASE = 'https://leadhunter-pro-production.up.railway.app';
 const body = document.getElementById('mainBody');
 const savedCountEl = document.getElementById('savedCount');
 let currentLead = null;
-let activeTab = 'maps';
-
-function switchTab(tab) {
-  activeTab = tab;
-  const tabMaps = document.getElementById('tabMaps');
-  const tabYelp = document.getElementById('tabYelp');
-  if (tab === 'maps') {
-    tabMaps.style.borderBottom = '2px solid #6366f1'; tabMaps.style.color = '#6366f1';
-    tabYelp.style.borderBottom = '2px solid transparent'; tabYelp.style.color = '#a0aec0';
-    chrome.tabs.query({ active: true, currentWindow: true }, ([t]) => {
-      if (!t?.url?.includes('google.com/maps')) renderNotMaps();
-      else renderExtractReady(t);
-    });
-  } else {
-    tabYelp.style.borderBottom = '2px solid #f97316'; tabYelp.style.color = '#f97316';
-    tabMaps.style.borderBottom = '2px solid transparent'; tabMaps.style.color = '#a0aec0';
-    renderYelpSearch();
-  }
-}
 
 async function init() {
   updateSavedCount();
@@ -30,7 +11,7 @@ async function init() {
 }
 
 function renderNotMaps() {
-  body.innerHTML = `<div class="not-maps"><div class="not-maps-icon">🗺️</div><div class="not-maps-title">Open Google Maps first</div><div class="not-maps-sub">Navigate to <strong>google.com/maps</strong>, search for businesses, then use the buttons below.</div><p style="font-size:11px;color:#a0aec0;margin-top:10px">Or use <strong style="color:#f97316">⭐ Yelp Search</strong> tab above — no Maps needed.</p></div>`;
+  body.innerHTML = `<div class="not-maps"><div class="not-maps-icon">🗺️</div><div class="not-maps-title">Open Google Maps first</div><div class="not-maps-sub">Navigate to <strong>google.com/maps</strong>, search for businesses, then use the buttons below.</div></div>`;
 }
 
 function renderExtractReady(tab) {
@@ -289,117 +270,6 @@ async function loadRecentLeads() {
   });
 }
 
-// ── Yelp Search ────────────────────────────────────────────────────────────
-function renderYelpSearch() {
-  body.innerHTML = `
-    <div class="yelp-form">
-      <input class="yelp-input" id="yelpTerm" placeholder="Business type (e.g. restaurants, clinics)" />
-      <input class="yelp-input" id="yelpLocation" placeholder="Location (e.g. Dubai, UAE)" value="Dubai, UAE" />
-      <button class="btn btn-primary" id="yelpSearchBtn" style="background:#f97316;box-shadow:0 2px 8px rgba(249,115,22,0.3)">
-        ⭐ Search Yelp
-      </button>
-    </div>
-    <div id="yelpResults"></div>
-  `;
-  document.getElementById('yelpSearchBtn').addEventListener('click', doYelpSearch);
-  document.getElementById('yelpTerm').addEventListener('keydown', e => { if (e.key === 'Enter') doYelpSearch(); });
-}
-
-async function doYelpSearch() {
-  const term = document.getElementById('yelpTerm').value.trim();
-  const location = document.getElementById('yelpLocation').value.trim() || 'Dubai, UAE';
-  if (!term) { document.getElementById('yelpTerm').focus(); return; }
-
-  const resultsEl = document.getElementById('yelpResults');
-  resultsEl.innerHTML = `<div class="loader"><div class="spinner" style="border-top-color:#f97316"></div><div class="loader-text">Searching Yelp...</div></div>`;
-
-  try {
-    const data = await fetchWithTimeout(`${API_BASE}/yelp/search?term=${encodeURIComponent(term)}&location=${encodeURIComponent(location)}&limit=20`, {}, 12000);
-    renderYelpResults(data.businesses || [], term, location);
-  } catch (e) {
-    resultsEl.innerHTML = `<div style="text-align:center;padding:16px;color:#ef4444;font-size:12px">❌ Search failed — check API key or try again.</div>`;
-  }
-}
-
-function renderYelpResults(businesses, term, location) {
-  const resultsEl = document.getElementById('yelpResults');
-  if (!businesses.length) {
-    resultsEl.innerHTML = `<div style="text-align:center;padding:16px;color:#a0aec0;font-size:12px">No results found for "${term}" in ${location}</div>`;
-    return;
-  }
-
-  const savedSet = new Set();
-
-  resultsEl.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <span style="font-size:11px;font-weight:700;color:#a0aec0;text-transform:uppercase;letter-spacing:0.4px">${businesses.length} businesses found</span>
-      <button id="yelpSaveAll" style="font-size:11px;font-weight:700;background:#16a34a;color:#fff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-family:inherit">
-        💾 Save All
-      </button>
-    </div>
-    <div class="yelp-results-wrap" id="yelpList">
-      ${businesses.map((b, i) => `
-        <div class="yelp-result" id="yelp-row-${i}">
-          <div class="yelp-result-info">
-            <div class="yelp-result-name">${escHtml(b.name)}</div>
-            <div class="yelp-result-sub">
-              ${b.category ? `🏷 ${escHtml(b.category)}` : ''}
-              ${b.rating ? ` · ⭐ ${b.rating}` : ''}
-              ${b.phone ? ` · 📞 ${escHtml(b.phone)}` : ''}
-            </div>
-            ${b.address ? `<div class="yelp-result-sub">📍 ${escHtml(b.address)}</div>` : ''}
-          </div>
-          <button class="yelp-save-btn" id="yelp-btn-${i}" data-idx="${i}">Save</button>
-        </div>
-      `).join('')}
-    </div>
-  `;
-
-  // Individual save buttons
-  businesses.forEach((b, i) => {
-    document.getElementById(`yelp-btn-${i}`).addEventListener('click', async () => {
-      const btn = document.getElementById(`yelp-btn-${i}`);
-      btn.disabled = true; btn.textContent = 'Saving...';
-      await saveYelpLead(b);
-      btn.textContent = '✓ Saved'; btn.classList.add('saved');
-      savedSet.add(i);
-      updateSavedCount();
-    });
-  });
-
-  // Save all
-  document.getElementById('yelpSaveAll').addEventListener('click', async () => {
-    const btn = document.getElementById('yelpSaveAll');
-    btn.disabled = true; btn.textContent = 'Saving...';
-    try {
-      await fetchWithTimeout(`${API_BASE}/yelp/save-bulk`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leads: businesses }),
-      }, 12000);
-      businesses.forEach((_, i) => {
-        const b = document.getElementById(`yelp-btn-${i}`);
-        if (b) { b.textContent = '✓ Saved'; b.classList.add('saved'); b.disabled = true; }
-      });
-      btn.textContent = `✓ All Saved`;
-      for (const b of businesses) await storeLeadLocally({ ...b, savedAt: new Date().toISOString() });
-      updateSavedCount();
-    } catch {
-      btn.disabled = false; btn.textContent = 'Save All';
-    }
-  });
-}
-
-async function saveYelpLead(lead) {
-  await storeLeadLocally({ ...lead, savedAt: new Date().toISOString() });
-  try {
-    await fetchWithTimeout(`${API_BASE}/yelp/save-bulk`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ leads: [lead] }),
-    }, 8000);
-  } catch {}
-}
 
 function escHtml(str) {
   return String(str || '').replace(/[&<>"']/g, c =>

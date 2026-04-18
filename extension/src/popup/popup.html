@@ -185,19 +185,6 @@
     .rb-weak { background: #fff7ed; color: #c2410c; }
     .rb-ok   { background: #e6fffa; color: #0d9488; }
 
-    /* Yelp search */
-    .yelp-form { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
-    .yelp-input { width:100%; padding:9px 12px; border:1px solid #e8eaf0; border-radius:8px; font-size:13px; font-family:inherit; color:#1a202c; outline:none; }
-    .yelp-input:focus { border-color:#6366f1; }
-    .yelp-result { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px; background:#fff; border:1px solid #e8eaf0; border-radius:8px; margin-bottom:6px; }
-    .yelp-result-info { flex:1; min-width:0; }
-    .yelp-result-name { font-size:12px; font-weight:700; color:#1a202c; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .yelp-result-sub { font-size:10px; color:#a0aec0; margin-top:2px; }
-    .yelp-save-btn { font-size:11px; font-weight:700; background:#6366f1; color:#fff; border:none; border-radius:6px; padding:5px 10px; cursor:pointer; white-space:nowrap; flex-shrink:0; font-family:inherit; }
-    .yelp-save-btn:disabled { background:#c7d2fe; cursor:default; }
-    .yelp-save-btn.saved { background:#16a34a; }
-    .yelp-results-wrap { max-height:280px; overflow-y:auto; }
-
     /* Success state */
     .success-card {
       text-align: center; padding: 20px;
@@ -217,17 +204,6 @@
     <span class="saved-pill" id="savedCount">0 saved</span>
   </div>
 
-  <!-- Tab bar -->
-  <div style="display:flex; border-bottom:1px solid #e8eaf0; background:#fff;">
-    <button id="tabMaps" onclick="switchTab('maps')"
-      style="flex:1;padding:9px 0;font-size:12px;font-weight:700;border:none;background:transparent;cursor:pointer;border-bottom:2px solid #6366f1;color:#6366f1;font-family:inherit;">
-      🗺️ Google Maps
-    </button>
-    <button id="tabYelp" onclick="switchTab('yelp')"
-      style="flex:1;padding:9px 0;font-size:12px;font-weight:700;border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;color:#a0aec0;font-family:inherit;">
-      ⭐ Yelp Search
-    </button>
-  </div>
 
   <div class="body" id="mainBody">
     <!-- Populated by popup.js -->
