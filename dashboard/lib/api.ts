@@ -1,3 +1,5 @@
+import { createClient } from './supabase';
+
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'https://leadhunter-pro-production.up.railway.app';
 
 export type OpportunityType = 'no_website' | 'weak_website' | 'has_website';
@@ -44,9 +46,21 @@ export interface OutreachMessages {
   call_script: string;
 }
 
+async function getAuthHeader(): Promise<Record<string, string>> {
+  try {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      return { Authorization: `Bearer ${session.access_token}` };
+    }
+  } catch {}
+  return {};
+}
+
 async function api<T>(path: string, opts: RequestInit = {}): Promise<T> {
+  const authHeader = await getAuthHeader();
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...opts.headers },
+    headers: { 'Content-Type': 'application/json', ...authHeader, ...opts.headers },
     ...opts,
   });
   if (!res.ok) {

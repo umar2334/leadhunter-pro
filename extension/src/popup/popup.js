@@ -1,9 +1,69 @@
 const API_BASE = 'https://leadhunter-pro-production.up.railway.app';
+const SUPABASE_URL = 'https://foneqqcjjqkfecozwxoo.supabase.co';
+const SUPABASE_ANON_KEY = 'REPLACE_WITH_ANON_KEY';
+
 const body = document.getElementById('mainBody');
 const savedCountEl = document.getElementById('savedCount');
 let currentLead = null;
+let authToken = null;
+
+async function getStoredAuth() {
+  return new Promise(resolve => {
+    chrome.storage.local.get(['auth_token', 'auth_email'], result => {
+      resolve({ token: result.auth_token || null, email: result.auth_email || null });
+    });
+  });
+}
+
+async function signIn(email, password) {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error_description || data.msg || 'Login failed');
+  return data.access_token;
+}
+
+async function signOut() {
+  await chrome.storage.local.remove(['auth_token', 'auth_email']);
+  authToken = null;
+  renderLoginForm();
+}
+
+function renderLoginForm(error = '') {
+  body.innerHTML = `
+    <div style="padding:16px">
+      <div style="font-size:13px;font-weight:700;color:#1a202c;margin-bottom:4px">Sign In</div>
+      <div style="font-size:11px;color:#718096;margin-bottom:14px">Use your LeadHunter dashboard credentials</div>
+      ${error ? `<div style="font-size:11px;color:#dc2626;background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:7px 10px;margin-bottom:10px">${escHtml(error)}</div>` : ''}
+      <input id="loginEmail" type="email" placeholder="Email" style="width:100%;padding:8px 10px;border:1.5px solid #e8eaf0;border-radius:7px;font-size:12px;font-family:inherit;margin-bottom:8px;outline:none;color:#1a202c" />
+      <input id="loginPassword" type="password" placeholder="Password" style="width:100%;padding:8px 10px;border:1.5px solid #e8eaf0;border-radius:7px;font-size:12px;font-family:inherit;margin-bottom:12px;outline:none;color:#1a202c" />
+      <button class="btn btn-primary" id="loginBtn">Sign In</button>
+    </div>
+  `;
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) return;
+    document.getElementById('loginBtn').disabled = true;
+    document.getElementById('loginBtn').textContent = 'Signing in...';
+    try {
+      const token = await signIn(email, password);
+      authToken = token;
+      await chrome.storage.local.set({ auth_token: token, auth_email: email });
+      init();
+    } catch (err) {
+      renderLoginForm(err.message);
+    }
+  });
+}
 
 async function init() {
+  const stored = await getStoredAuth();
+  authToken = stored.token;
+  if (!authToken) { renderLoginForm(); return; }
   updateSavedCount();
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.url?.includes('google.com/maps')) { renderNotMaps(); return; }
@@ -11,7 +71,15 @@ async function init() {
 }
 
 function renderNotMaps() {
-  body.innerHTML = `<div class="not-maps"><div class="not-maps-icon">🗺️</div><div class="not-maps-title">Open Google Maps first</div><div class="not-maps-sub">Navigate to <strong>google.com/maps</strong>, search for businesses, then use the buttons below.</div></div>`;
+  body.innerHTML = `<div class="not-maps"><div class="not-maps-icon">🗺️</div><div class="not-maps-title">Open Google Maps first</div><div class="not-maps-sub">Navigate to <strong>google.com/maps</strong>, search for businesses, then use the buttons below.</div></div>${renderSignOutLink()}`;
+}
+
+function renderSignOutLink() {
+  const div = document.createElement('div');
+  div.style.cssText = 'text-align:center;padding:8px 0 4px';
+  div.innerHTML = `<button id="signOutBtn" style="font-size:10px;color:#a0aec0;background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline">Sign out</button>`;
+  setTimeout(() => document.getElementById('signOutBtn')?.addEventListener('click', signOut), 0);
+  return div.outerHTML;
 }
 
 function renderExtractReady(tab) {
@@ -139,7 +207,7 @@ async function doExtract(tab) {
   try {
     const result = await fetchWithTimeout(`${API_BASE}/leads/extract`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
       body: JSON.stringify(rawData),
     }, 25000);
     currentLead = result;
@@ -189,7 +257,7 @@ async function doBulkExtract(tab) {
   try {
     const result = await fetchWithTimeout(`${API_BASE}/leads/bulk-save`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
       body: JSON.stringify({ leads: rows }),
     }, 15000);
     renderBulkResult(result.saved || rows.length, businesses.length);
@@ -206,7 +274,7 @@ async function doSave() {
   try {
     await fetchWithTimeout(`${API_BASE}/leads/save`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
       body: JSON.stringify(currentLead),
     }, 8000);
   } catch {}

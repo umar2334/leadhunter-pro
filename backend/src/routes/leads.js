@@ -2,9 +2,11 @@ import express from 'express';
 import { analyzeWebsite } from '../services/websiteAnalyzer.js';
 import { generateOutreach } from '../services/geminiService.js';
 import { supabase } from '../services/supabaseClient.js';
+import { optionalAuth } from '../middleware/auth.js';
 import * as XLSX from 'xlsx';
 
 const router = express.Router();
+router.use(optionalAuth);
 
 // POST /leads/extract
 router.post('/extract', async (req, res, next) => {
@@ -73,6 +75,7 @@ router.post('/save', async (req, res, next) => {
     if (lead.whatsapp_number) row.whatsapp_number = lead.whatsapp_number;
     if (lead.website_phone) row.website_phone = lead.website_phone;
     if (lead.owner_name) row.owner_name = lead.owner_name;
+    if (req.userId) row.user_id = req.userId;
 
     let { data, error } = await supabase.from('leads').upsert(row, { onConflict: 'maps_url', ignoreDuplicates: false }).select().single();
     // If new columns don't exist yet, retry without them
@@ -169,6 +172,7 @@ router.get('/', async (req, res, next) => {
   try {
     const { opportunity_type, category, status, search, limit = 100, offset = 0 } = req.query;
     let query = supabase.from('leads').select('*').order('created_at', { ascending: false }).range(Number(offset), Number(offset) + Number(limit) - 1);
+    if (req.userId) query = query.eq('user_id', req.userId);
     if (opportunity_type) query = query.eq('opportunity_type', opportunity_type);
     if (category) query = query.ilike('category', `%${category}%`);
     if (status) query = query.eq('status', status);
@@ -182,7 +186,9 @@ router.get('/', async (req, res, next) => {
 // GET /leads/stats
 router.get('/stats', async (req, res, next) => {
   try {
-    const { data, error } = await supabase.from('leads').select('opportunity_type, status');
+    let q = supabase.from('leads').select('opportunity_type, status');
+    if (req.userId) q = q.eq('user_id', req.userId);
+    const { data, error } = await q;
     if (error) return res.status(500).json({ error: error.message });
     res.json({
       total: data.length,

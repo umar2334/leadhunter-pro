@@ -1,7 +1,9 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Compass, Zap, BarChart2, Settings, Brain } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { LayoutDashboard, Compass, Zap, BarChart2, Settings, Brain, LogOut } from 'lucide-react';
+import { createClient } from '@/lib/supabase';
+import { useEffect, useState } from 'react';
 
 const nav = [
   { href: '/',              label: 'Dashboard',    icon: LayoutDashboard },
@@ -13,6 +15,19 @@ const nav = [
 
 export default function Sidebar() {
   const path = usePathname();
+  const router = useRouter();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? null));
+  }, []);
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+  }
 
   return (
     <aside className="sidebar">
@@ -38,8 +53,18 @@ export default function Sidebar() {
       </nav>
 
       <div className="sidebar-footer">
-        <div className="sidebar-enterprise-label">Enterprise</div>
-        <button className="btn-upgrade">Upgrade to Enterprise</button>
+        {userEmail && (
+          <div style={{ padding: '10px 14px', borderTop: '1px solid #f0f2f7', marginBottom: 8 }}>
+            <div style={{ fontSize: 11, color: '#a0aec0', fontWeight: 600, marginBottom: 2 }}>Signed in as</div>
+            <div style={{ fontSize: 12, color: '#4a5568', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail}</div>
+          </div>
+        )}
+        <button onClick={handleLogout}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#718096', fontFamily: 'inherit', borderRadius: 8 }}
+          onMouseOver={e => (e.currentTarget.style.background = '#fef2f2', e.currentTarget.style.color = '#ef4444')}
+          onMouseOut={e => (e.currentTarget.style.background = 'none', e.currentTarget.style.color = '#718096')}>
+          <LogOut size={14} /> Sign Out
+        </button>
       </div>
     </aside>
   );
