@@ -10,7 +10,18 @@ const router = express.Router();
 router.post('/extract', async (req, res, next) => {
   try {
     const lead = { ...req.body };
-    if (lead.website) {
+    const SOCIAL_DOMAINS = ['facebook.com', 'fb.com', 'instagram.com', 'twitter.com', 'x.com', 'linkedin.com', 'tiktok.com', 'youtube.com', 'snapchat.com'];
+    const isSocialUrl = lead.website && SOCIAL_DOMAINS.some(d => lead.website.toLowerCase().includes(d));
+
+    if (isSocialUrl) {
+      lead.opportunity_type = 'no_website';
+      lead.analysis = { exists: false, score: 0, issues: ['No real website — only a social media page'], summary: 'Business has no website, only a social media presence. High opportunity.', email: null };
+      lead.analysis_score = 0;
+      lead.analysis_issues = ['No real website — only a social media page'];
+      lead.analysis_summary = 'Business has no website, only a social media presence. High opportunity.';
+      lead.email = null;
+      lead.website = null;
+    } else if (lead.website) {
       lead.analysis = await analyzeWebsite(lead.website);
       const score = lead.analysis.score;
       lead.opportunity_type = score < 50 ? 'weak_website' : 'has_website';
