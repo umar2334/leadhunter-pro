@@ -21,8 +21,8 @@ export default function OutreachModal({ leadId, leadName, leadEmail, onClose, on
   async function generate() {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/outreach`, { method: 'POST' });
-      const data = await res.json();
+      const { leadsApi } = await import('@/lib/api');
+      const data = await leadsApi.outreach(leadId);
       setMessages(data);
     } catch { alert('Failed to generate — check API connection.'); }
     setLoading(false);
