@@ -1,6 +1,6 @@
 const API_BASE = 'https://leadhunter-pro-production.up.railway.app';
 const SUPABASE_URL = 'https://foneqqcjjqkfecozwxoo.supabase.co';
-const SUPABASE_ANON_KEY = 'REPLACE_WITH_ANON_KEY';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvbmVxcWNqanFrZmVjb3p3eG9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MDk5MDUsImV4cCI6MjA5MTk4NTkwNX0.-N1Ur9VGL2G8Sc6JsklGBplppmiCJ3vKWKlDkQAALOk';
 
 const body = document.getElementById('mainBody');
 const savedCountEl = document.getElementById('savedCount');
