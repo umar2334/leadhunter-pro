@@ -101,49 +101,60 @@ export async function analyzeWebsite(rawUrl) {
   });
   report.website_phone = [...telPhones][0] || null;
 
-  // If no email on homepage, try /contact page
+  // ── Deep scrape: contact/about/team pages in parallel ────────────────────
   if (!report.email || !report.whatsapp_number || !report.website_phone) {
-    try {
-      const contactUrl = new URL('/contact', finalUrl).href;
-      const controller2 = new AbortController();
-      const tid2 = setTimeout(() => controller2.abort(), 6000);
-      const res2 = await fetch(contactUrl, {
-        signal: controller2.signal,
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; LeadHunterBot/1.0)' },
-      });
-      clearTimeout(tid2);
-      if (res2.ok) {
-        const html2 = await res2.text();
-        const $2 = cheerio.load(html2);
+    const extraPaths = ['/contact', '/contact-us', '/about', '/about-us', '/team', '/reach-us', '/get-in-touch'];
 
-        if (!report.email) {
-          for (const match of (html2.match(emailRegex) || [])) {
-            const e = match.toLowerCase();
-            if (!SPAM.some(s => e.includes(s)) && e.length < 60) { report.email = e; break; }
-          }
+    const fetchPage = async (path) => {
+      try {
+        const url2 = new URL(path, finalUrl).href;
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 5000);
+        const r = await fetch(url2, {
+          signal: ctrl.signal,
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; LeadHunterBot/1.0)' },
+        });
+        clearTimeout(tid);
+        if (!r.ok) return null;
+        return await r.text();
+      } catch { return null; }
+    };
+
+    const pages = await Promise.all(extraPaths.map(fetchPage));
+
+    for (const pageHtml of pages) {
+      if (!pageHtml) continue;
+      if (report.email && report.whatsapp_number && report.website_phone) break;
+
+      const $p = cheerio.load(pageHtml);
+
+      if (!report.email) {
+        for (const match of (pageHtml.match(emailRegex) || [])) {
+          const e = match.toLowerCase();
+          if (!SPAM.some(s => e.includes(s)) && e.length < 60) { report.email = e; break; }
         }
+      }
 
-        if (!report.whatsapp_number) {
-          const waM = html2.match(/wa\.me\/(\+?[\d]{7,15})/);
-          if (waM) report.whatsapp_number = '+' + waM[1].replace(/^\+/, '');
-          else {
-            $2('a[href*="wa.me"]').each((_, el) => {
-              if (report.whatsapp_number) return;
-              const m = ($2(el).attr('href') || '').match(/wa\.me\/(\+?[\d]{7,15})/);
-              if (m) report.whatsapp_number = '+' + m[1].replace(/^\+/, '');
-            });
-          }
-        }
-
-        if (!report.website_phone) {
-          $2('a[href^="tel:"]').each((_, el) => {
-            if (report.website_phone) return;
-            const raw = $2(el).attr('href').replace('tel:', '').replace(/\s/g, '').trim();
-            if (raw.length >= 7) report.website_phone = raw;
+      if (!report.whatsapp_number) {
+        const waM = pageHtml.match(/wa\.me\/(\+?[\d]{7,15})/);
+        if (waM) report.whatsapp_number = '+' + waM[1].replace(/^\+/, '');
+        else {
+          $p('a[href*="wa.me"]').each((_, el) => {
+            if (report.whatsapp_number) return;
+            const m = ($p(el).attr('href') || '').match(/wa\.me\/(\+?[\d]{7,15})/);
+            if (m) report.whatsapp_number = '+' + m[1].replace(/^\+/, '');
           });
         }
       }
-    } catch {}
+
+      if (!report.website_phone) {
+        $p('a[href^="tel:"]').each((_, el) => {
+          if (report.website_phone) return;
+          const raw = $p(el).attr('href').replace('tel:', '').replace(/\s/g, '').trim();
+          if (raw.length >= 7) report.website_phone = raw;
+        });
+      }
+    }
   }
 
   // ── Quality scoring ───────────────────────────────────────────────────────
