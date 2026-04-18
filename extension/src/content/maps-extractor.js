@@ -155,7 +155,9 @@
   const observer = new MutationObserver(() => {
     const nameEl = document.querySelector('h1.DUwDvf');
     if (nameEl && nameEl.textContent !== lastExtracted?.name) {
-      chrome.runtime.sendMessage({ action: 'business_detected', name: nameEl.textContent?.trim() });
+      try {
+        chrome.runtime.sendMessage({ action: 'business_detected', name: nameEl.textContent?.trim() });
+      } catch {}
     }
   });
   observer.observe(document.body, { childList: true, subtree: true });
