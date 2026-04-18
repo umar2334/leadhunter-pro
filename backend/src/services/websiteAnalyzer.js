@@ -13,6 +13,7 @@ export async function analyzeWebsite(rawUrl) {
     email: null,
     whatsapp_number: null,
     website_phone: null,
+    owner_name: null,
   };
 
   let url = rawUrl.trim();
@@ -156,6 +157,27 @@ export async function analyzeWebsite(rawUrl) {
       }
     }
   }
+
+  // ── Owner name extraction ─────────────────────────────────────────────────
+  const ownerKeywords = /\b(founder|owner|ceo|director|manager|proprietor|md|managing director|principal)\b/i;
+  const namePattern = /([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)/g;
+
+  const scanForOwner = (h, $el) => {
+    if (report.owner_name) return;
+    const text = $el('body').text();
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    for (const line of lines) {
+      if (ownerKeywords.test(line) && line.length < 120) {
+        const names = line.match(namePattern);
+        if (names) { report.owner_name = names[0]; return; }
+      }
+    }
+    // fallback: meta author tag
+    const author = $el('meta[name="author"]').attr('content');
+    if (author && author.length > 3 && author.length < 60) report.owner_name = author;
+  };
+
+  scanForOwner(html, $);
 
   // ── Quality scoring ───────────────────────────────────────────────────────
   let score = 100;

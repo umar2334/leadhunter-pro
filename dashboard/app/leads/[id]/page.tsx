@@ -122,7 +122,12 @@ export default function LeadDetailPage() {
                   {opp.label}
                 </span>
               </div>
-              {lead.category && <div style={{ fontSize: 13, color: '#718096', marginBottom: 14 }}>{lead.category}</div>}
+              {lead.category && <div style={{ fontSize: 13, color: '#718096', marginBottom: 6 }}>{lead.category}</div>}
+              {lead.owner_name && (
+                <div style={{ fontSize: 12, color: '#6366f1', fontWeight: 600, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  👤 {lead.owner_name}
+                </div>
+              )}
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 20px' }}>
                 {lead.phone && (
@@ -180,12 +185,12 @@ export default function LeadDetailPage() {
               </div>
             </div>
 
-            {/* Status picker */}
+            {/* Status + Follow-up */}
             <div className="no-print">
               <div style={{ fontSize: 10, fontWeight: 700, color: '#a0aec0', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>
                 Pipeline Status
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
                 {STATUSES.map((s) => (
                   <button key={s} onClick={() => updateStatus(s)}
                     className={`status-pill-btn ${lead.status === s ? `spb-active-${s}` : ''}`}>
@@ -194,6 +199,23 @@ export default function LeadDetailPage() {
                   </button>
                 ))}
               </div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#a0aec0', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>
+                Follow-up Date
+              </div>
+              <input type="date"
+                value={lead.follow_up_date ? lead.follow_up_date.slice(0, 10) : ''}
+                onChange={async (e) => {
+                  const d = e.target.value || null;
+                  setLead(prev => prev ? { ...prev, follow_up_date: d } : prev);
+                  await leadsApi.update(id, { follow_up_date: d });
+                }}
+                style={{ fontSize: 12, border: '1px solid #e8eaf0', borderRadius: 7, padding: '6px 10px', fontFamily: 'inherit', color: '#2d3748', cursor: 'pointer', outline: 'none' }}
+              />
+              {lead.follow_up_date && new Date(lead.follow_up_date) < new Date() && (
+                <div style={{ marginTop: 6, fontSize: 11, fontWeight: 700, color: '#ef4444', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 6, padding: '4px 8px' }}>
+                  ⚠️ Follow-up overdue!
+                </div>
+              )}
             </div>
           </div>
         </div>

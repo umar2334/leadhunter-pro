@@ -31,6 +31,7 @@ router.post('/extract', async (req, res, next) => {
       lead.email = lead.analysis.email || null;
       lead.whatsapp_number = lead.analysis.whatsapp_number || null;
       lead.website_phone = lead.analysis.website_phone || null;
+      lead.owner_name = lead.analysis.owner_name || null;
 
       // Flag phone mismatch: Maps phone ≠ website phone
       if (lead.phone && lead.website_phone) {
@@ -71,11 +72,12 @@ router.post('/save', async (req, res, next) => {
     };
     if (lead.whatsapp_number) row.whatsapp_number = lead.whatsapp_number;
     if (lead.website_phone) row.website_phone = lead.website_phone;
+    if (lead.owner_name) row.owner_name = lead.owner_name;
 
     let { data, error } = await supabase.from('leads').upsert(row, { onConflict: 'maps_url', ignoreDuplicates: false }).select().single();
     // If new columns don't exist yet, retry without them
     if (error && error.message?.includes('column')) {
-      delete row.whatsapp_number; delete row.website_phone;
+      delete row.whatsapp_number; delete row.website_phone; delete row.owner_name;
       ({ data, error } = await supabase.from('leads').upsert(row, { onConflict: 'maps_url', ignoreDuplicates: false }).select().single());
     }
     if (error) return res.status(500).json({ error: error.message });
@@ -250,7 +252,7 @@ router.get('/:id', async (req, res, next) => {
 // PATCH /leads/:id
 router.patch('/:id', async (req, res, next) => {
   try {
-    const allowed = ['status', 'notes', 'outreach_sent'];
+    const allowed = ['status', 'notes', 'outreach_sent', 'follow_up_date', 'owner_name'];
     const updates = {};
     for (const key of allowed) { if (req.body[key] !== undefined) updates[key] = req.body[key]; }
     const { data, error } = await supabase.from('leads').update(updates).eq('id', req.params.id).select().single();

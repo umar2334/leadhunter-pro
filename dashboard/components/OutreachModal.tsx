@@ -1,17 +1,18 @@
 'use client';
 import { useState } from 'react';
-import { X, Copy, Check, Loader2, Mail, MessageSquare, Phone } from 'lucide-react';
+import { X, Copy, Check, Loader2, Mail, MessageSquare, Phone, Send } from 'lucide-react';
 import type { OutreachMessages } from '@/lib/api';
 
 interface Props {
   leadId: string;
   leadName: string;
+  leadEmail?: string | null;
   onClose: () => void;
   onMarkContacted: () => void;
 }
 type Tab = 'email' | 'whatsapp' | 'call_script';
 
-export default function OutreachModal({ leadId, leadName, onClose, onMarkContacted }: Props) {
+export default function OutreachModal({ leadId, leadName, leadEmail, onClose, onMarkContacted }: Props) {
   const [messages, setMessages] = useState<OutreachMessages | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('email');
@@ -103,6 +104,10 @@ export default function OutreachModal({ leadId, leadName, onClose, onMarkContact
                     </div>
                     <div className="msg-text">{messages.email.body}</div>
                   </div>
+                  <a href={`mailto:${leadEmail || ''}?subject=${encodeURIComponent(messages.email.subject)}&body=${encodeURIComponent(messages.email.body)}`}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#6366f1', color: '#fff', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none', marginTop: 4 }}>
+                    <Send size={13} /> Send Email
+                  </a>
                 </div>
               )}
 

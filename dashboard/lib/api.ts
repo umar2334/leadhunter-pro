@@ -20,6 +20,8 @@ export interface Lead {
   maps_url: string | null;
   whatsapp_number: string | null;
   website_phone: string | null;
+  owner_name: string | null;
+  follow_up_date: string | null;
   status: LeadStatus;
   notes: string | null;
   outreach_sent: boolean;
@@ -60,7 +62,7 @@ export const leadsApi = {
     return api<{ leads: Lead[]; total: number }>(`/leads${qs ? '?' + qs : ''}`);
   },
   get: (id: string) => api<Lead>(`/leads/${id}`),
-  update: (id: string, body: Partial<Pick<Lead, 'status' | 'notes' | 'outreach_sent'>>) =>
+  update: (id: string, body: Partial<Pick<Lead, 'status' | 'notes' | 'outreach_sent' | 'follow_up_date' | 'owner_name'>>) =>
     api<Lead>(`/leads/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: (id: string) => api<{ success: boolean }>(`/leads/${id}`, { method: 'DELETE' }),
   stats: () => api<Stats>('/leads/stats'),

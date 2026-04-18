@@ -144,6 +144,31 @@ export default function HomePage() {
         <p className="page-subtitle">Businesses from Google Maps — analyzed and ready for outreach.</p>
 
         <StatsBar stats={stats} />
+
+        {/* Overdue follow-up reminders */}
+        {(() => {
+          const overdue = leads.filter(l => l.follow_up_date && new Date(l.follow_up_date) < new Date());
+          if (!overdue.length) return null;
+          return (
+            <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 18 }}>⏰</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 4 }}>
+                  {overdue.length} Follow-up{overdue.length > 1 ? 's' : ''} Overdue
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {overdue.map(l => (
+                    <a key={l.id} href={`/leads/${l.id}`}
+                      style={{ fontSize: 11, fontWeight: 600, background: '#fff', border: '1px solid #fca5a5', borderRadius: 6, padding: '3px 8px', color: '#dc2626', textDecoration: 'none' }}>
+                      {l.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         <LeadFilters filters={filters} onChange={setFilters} />
 
         {loading ? (

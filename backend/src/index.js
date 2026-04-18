@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import leadsRouter from './routes/leads.js';
 import analyzeRouter from './routes/analyze.js';
+import scanRouter from './routes/scan.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -24,6 +25,7 @@ app.get('/health', (_, res) => res.json({ status: 'ok', ts: Date.now() }));
 
 app.use('/leads', leadsRouter);
 app.use('/analyze', analyzeRouter);
+app.use('/scan', scanRouter);
 
 app.use((err, req, res, _next) => {
   console.error(err);
