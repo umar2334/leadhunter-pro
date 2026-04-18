@@ -172,7 +172,7 @@ router.get('/', async (req, res, next) => {
   try {
     const { opportunity_type, category, status, search, limit = 100, offset = 0 } = req.query;
     let query = supabase.from('leads').select('*').order('created_at', { ascending: false }).range(Number(offset), Number(offset) + Number(limit) - 1);
-    if (req.userId) query = query.eq('user_id', req.userId);
+    if (req.userId) query = query.or(`user_id.eq.${req.userId},user_id.is.null`);
     if (opportunity_type) query = query.eq('opportunity_type', opportunity_type);
     if (category) query = query.ilike('category', `%${category}%`);
     if (status) query = query.eq('status', status);
@@ -187,7 +187,7 @@ router.get('/', async (req, res, next) => {
 router.get('/stats', async (req, res, next) => {
   try {
     let q = supabase.from('leads').select('opportunity_type, status');
-    if (req.userId) q = q.eq('user_id', req.userId);
+    if (req.userId) q = q.or(`user_id.eq.${req.userId},user_id.is.null`);
     const { data, error } = await q;
     if (error) return res.status(500).json({ error: error.message });
     res.json({
